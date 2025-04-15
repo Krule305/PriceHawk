@@ -10,9 +10,11 @@ import {
   updateDoc,
 } from "firebase/firestore";
 import { signOut } from "firebase/auth";
+import { deleteDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import AddProduct from "./AddProduct";
 import ProductCard from "./ProductCard";
+import DeleteConfirmModal from "./DeleteConfirmModal";
 import { toast } from "react-toastify";
 
 export default function Dashboard() {
@@ -21,6 +23,8 @@ export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [products, setProducts] = useState([]);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState("Sve");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -105,6 +109,34 @@ export default function Dashboard() {
     setIsModalOpen(false);
   };
 
+  const handleDeleteProduct = async (productId) => {
+    const user = auth.currentUser;
+    if (!user) return;
+  
+    try {
+      const productRef = doc(db, "users", user.uid, "products", productId);
+      await deleteDoc(productRef);
+      toast.success("Proizvod je obrisan.");
+      await refreshProducts();
+    } catch (error) {
+      console.error("Greška pri brisanju proizvoda:", error);
+      toast.error("Brisanje nije uspjelo.");
+    }
+  };
+  
+  const getCategoryCounts = () => {
+    const counts = {};
+    products.forEach((p) => {
+      const cat = p.category || "Neodređeno";
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    counts["Sve"] = products.length;
+    return counts;
+  };
+
+  const categoryCounts = getCategoryCounts();
+  const allCategories = ["Sve", ...new Set(products.map((p) => p.category || "Neodređeno"))];
+
   if (loading) return <p>Učitavanje...</p>;
 
   return (
@@ -131,6 +163,28 @@ export default function Dashboard() {
               ➕ Dodaj novi proizvod
             </button>
 
+            {/* Gumbi za kategorije */}
+            <div style={{ marginBottom: "1.5rem" }}>
+              {allCategories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  style={{
+                    marginRight: "0.5rem",
+                    padding: "0.5rem 1rem",
+                    backgroundColor: selectedCategory === cat ? "#1976d2" : "#eee",
+                    color: selectedCategory === cat ? "#fff" : "#000",
+                    border: "none",
+                    borderRadius: "5px",
+                    cursor: "pointer",
+                  }}
+                >
+                  {cat} ({categoryCounts[cat] || 0})
+                </button>
+              ))}
+            </div>
+
+            {/* Kartice proizvoda */}
             <div
               style={{
                 display: "flex",
@@ -139,15 +193,18 @@ export default function Dashboard() {
                 gap: "1rem",
               }}
             >
-              {products.map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  onEdit={(p) => {
-                    setEditingProduct(p);
-                    setIsModalOpen(true);
-                  }}
-                />
+              {products
+                .filter((p) => selectedCategory === "Sve" || p.category === selectedCategory)
+                .map((product) => (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    onEdit={(p) => {
+                      setEditingProduct(p);
+                      setIsModalOpen(true);
+                    }}
+                    onDelete={(id) => setProductToDelete(id)}
+                  />
               ))}
             </div>
           </>
@@ -163,6 +220,16 @@ export default function Dashboard() {
         onSave={handleSaveProduct}
         initialData={editingProduct}
       />
+
+      <DeleteConfirmModal
+        isOpen={!!productToDelete}
+        onCancel={() => setProductToDelete(null)}
+        onConfirm={async () => {
+          await handleDeleteProduct(productToDelete);
+          setProductToDelete(null);
+        }}
+      />
+
     </div>
   );
 }

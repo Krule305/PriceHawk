@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
+  const [category, setCategory] = useState("");
   const [targetPrice, setTargetPrice] = useState("");
 
   // Kad god dobijemo nove početne podatke (kod uređivanja), popuni formu
@@ -11,10 +12,12 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
     if (initialData) {
       setName(initialData.name || "");
       setUrl(initialData.url || "");
+      setCategory(initialData?.category || "");
       setTargetPrice(initialData.targetPrice || "");
     } else {
       setName("");
       setUrl("");
+      setCategory("");
       setTargetPrice("");
     }
   }, [initialData, isOpen]);
@@ -29,6 +32,7 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
     const product = {
         name,
         url,
+        category,
         targetPrice: targetPrice || null,
         createdAt: initialData?.createdAt || new Date(),
       };
@@ -64,6 +68,21 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
             required
             style={styles.input}
           />
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            required
+            style={styles.input}
+          >
+            <option value="">Odaberi kategoriju</option>
+            <option value="Elektronika">Elektronika</option>
+            <option value="Odjeća/obuća">Odjeća/obuća</option>
+            <option value="Kozmetika">Kozmetika</option>
+            <option value="Sport">Sport</option>
+            <option value="Knjige">Knjige</option>
+            <option value="Dodaci">Dodaci</option>
+            <option value="Ostalo">Ostalo</option>
+          </select>
           <input
             type="number"
             placeholder="Željena cijena (opcionalno)"
