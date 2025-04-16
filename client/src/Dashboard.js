@@ -1,4 +1,3 @@
-// Dashboard.js
 import { useEffect, useState } from "react";
 import { auth, db } from "./firebase";
 import {
@@ -8,9 +7,9 @@ import {
   addDoc,
   getDocs,
   updateDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { signOut } from "firebase/auth";
-import { deleteDoc } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
 import AddProduct from "./AddProduct";
 import ProductCard from "./ProductCard";
@@ -95,7 +94,10 @@ export default function Dashboard() {
         await updateDoc(docRef, updatedFields);
         toast.success("Proizvod je ažuriran!");
       } else {
-        await addDoc(userProductsRef, product);
+        await addDoc(userProductsRef, {
+          ...product,
+          createdAt: new Date(),
+        });
         toast.success("Proizvod je uspješno dodan!");
       }
 
@@ -112,7 +114,7 @@ export default function Dashboard() {
   const handleDeleteProduct = async (productId) => {
     const user = auth.currentUser;
     if (!user) return;
-  
+
     try {
       const productRef = doc(db, "users", user.uid, "products", productId);
       await deleteDoc(productRef);
@@ -123,7 +125,7 @@ export default function Dashboard() {
       toast.error("Brisanje nije uspjelo.");
     }
   };
-  
+
   const getCategoryCounts = () => {
     const counts = {};
     products.forEach((p) => {
@@ -152,19 +154,29 @@ export default function Dashboard() {
             <p style={{ fontSize: "1.2rem", color: "#777" }}>
               Nemate niti jedan proizvod za praćenje.
             </p>
-            <button onClick={() => setIsModalOpen(true)}>➕ Dodaj proizvod</button>
+            <button
+              onClick={() => {
+                setEditingProduct(null);
+                setIsModalOpen(true);
+              }}
+              style={styles.addButton}
+            >
+              ➕ Dodaj proizvod
+            </button>
           </>
         ) : (
           <>
             <button
-              onClick={() => setIsModalOpen(true)}
-              style={{ marginBottom: "2rem" }}
+              onClick={() => {
+                setEditingProduct(null);
+                setIsModalOpen(true);
+              }}
+              style={styles.addButton}
             >
               ➕ Dodaj novi proizvod
             </button>
 
-            {/* Gumbi za kategorije */}
-            <div style={{ marginBottom: "1.5rem" }}>
+            <div style={{ margin: "1.5rem 0" }}>
               {allCategories.map((cat) => (
                 <button
                   key={cat}
@@ -184,7 +196,6 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {/* Kartice proizvoda */}
             <div
               style={{
                 display: "flex",
@@ -229,7 +240,6 @@ export default function Dashboard() {
           setProductToDelete(null);
         }}
       />
-
     </div>
   );
 }
@@ -255,5 +265,13 @@ const styles = {
     border: "none",
     borderRadius: "5px",
     cursor: "pointer",
+  },
+  addButton: {
+    padding: "0.5rem 1rem",
+    backgroundColor: "#eee",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    transition: "background-color 0.2s",
   },
 };

@@ -1,21 +1,16 @@
-import { FaTrash, FaEdit } from "react-icons/fa";
-
 export default function ProductCard({ product, onEdit, onDelete }) {
   const {
     name,
-    url,
+    urls,
     targetPrice,
     createdAt,
     imageUrl,
   } = product;
 
-  const getShopName = (url) => {
-    try {
-      return new URL(url).hostname.replace("www.", "");
-    } catch {
-      return "Nepoznata trgovina";
-    }
-  };
+  const formattedDate =
+    createdAt && typeof createdAt.toDate === "function"
+      ? createdAt.toDate().toLocaleDateString()
+      : "Nepoznat datum";
 
   const getShortUrl = (url) => {
     try {
@@ -26,16 +21,8 @@ export default function ProductCard({ product, onEdit, onDelete }) {
     }
   };
 
-  const formattedDate =
-    createdAt && typeof createdAt.toDate === "function"
-      ? createdAt.toDate().toLocaleDateString()
-      : "Nepoznat datum";
-
   return (
-    <div
-      style={styles.card}
-      onClick={() => onEdit && onEdit(product)}
-    >
+    <div style={styles.card}>
       <div style={styles.imageContainer}>
         <img
           src={imageUrl || "https://via.placeholder.com/250x180?text=Slika"}
@@ -44,53 +31,41 @@ export default function ProductCard({ product, onEdit, onDelete }) {
         />
       </div>
 
-      {/* Uredi (gore desno) */}
-      <div
-        onClick={(e) => {
-          e.stopPropagation();
-          onEdit && onEdit(product);
-        }}
-        style={styles.editIcon}
-        title="Uredi proizvod"
-      >
-        <FaEdit size={18} color="#1976d2" />
-      </div>
-
-      <div style={styles.info}>
-        <h4>{typeof name === "string" ? name : "Nepoznato ime"}</h4>
-        <p><strong>Trgovina:</strong> {getShopName(url)}</p>
-        <p>
-          <strong>URL:</strong>{" "}
-          <a
-            href={url}
-            target="_blank"
-            rel="noreferrer"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {getShortUrl(url)}
-          </a>
-        </p>
+      <div style={styles.content}>
+        <h4 style={{ marginBottom: "0.5rem" }}>
+          {typeof name === "string" ? name : "Nepoznato ime"}
+        </h4>
         <p><strong>Dodano:</strong> {formattedDate}</p>
 
-        {/* Željena cijena */}
         {!isNaN(parseFloat(targetPrice)) && (
-          <p>
-            <strong>Željena cijena:</strong>{" "}
-            {parseFloat(targetPrice).toFixed(2)} €
-          </p>
+          <p><strong>Željena cijena:</strong> {parseFloat(targetPrice).toFixed(2)} €</p>
         )}
 
-        {/* Obriši (dolje desno) */}
-        <div
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete && onDelete(product.id);
-          }}
-          style={styles.trashIcon}
-          title="Obriši proizvod"
-        >
-          <FaTrash size={18} color="#e53935" />
-        </div>
+        {Array.isArray(urls) && urls.length > 0 && (
+          <div style={{ marginTop: "0.75rem" }}>
+            <p style={{ marginBottom: "0.25rem" }}>
+              <strong>Praćene trgovine:</strong>
+            </p>
+            <ul style={styles.urlList}>
+              {urls.map((url, i) => (
+                <li key={i} style={styles.urlItem}>
+                  <a href={url} target="_blank" rel="noreferrer">
+                    {getShortUrl(url)}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
+      <div style={styles.actions}>
+        <button onClick={() => onEdit && onEdit(product)} style={styles.editButton}>
+          Uredi
+        </button>
+        <button onClick={() => onDelete && onDelete(product.id)} style={styles.deleteButton}>
+          Obriši
+        </button>
       </div>
     </div>
   );
@@ -98,48 +73,64 @@ export default function ProductCard({ product, onEdit, onDelete }) {
 
 const styles = {
   card: {
-    width: "250px",
+    width: "300px",
+    height: "520px", // fiksna visina
     border: "1px solid #ccc",
     borderRadius: "10px",
     overflow: "hidden",
     backgroundColor: "#fff",
     boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
     textAlign: "left",
-    transition: "transform 0.2s ease, box-shadow 0.2s ease",
-    cursor: "pointer",
     position: "relative",
+    display: "flex",
+    flexDirection: "column",
   },
   imageContainer: {
-    height: "180px",
-    backgroundColor: "#f0f0f0",
+    height: "220px",
+    backgroundColor: "white",
   },
   image: {
     width: "100%",
     height: "100%",
-    objectFit: "cover",
+    objectFit: "scale-down",
   },
-  info: {
+  content: {
     padding: "1rem",
-    fontSize: "0.95rem",
-    lineHeight: "1.5",
-    position: "relative",
+    fontSize: "0.9rem",
+    flex: 1,
+    overflowY: "auto",
   },
-  trashIcon: {
-    position: "absolute",
-    bottom: "10px",
-    right: "10px",
-    padding: "4px",
+  urlList: {
+    paddingLeft: "1.2rem",
+    margin: 0,
+  },
+  urlItem: {
+    fontSize: "0.9rem",
+    marginBottom: "4px",
+    listStyleType: "disc",
+  },
+  actions: {
+    padding: "0.75rem 1rem",
+    borderTop: "1px solid #eee",
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: "0.5rem",
+    backgroundColor: "#fafafa",
+  },
+  editButton: {
+    backgroundColor: "#1976d2",
+    color: "#fff",
+    border: "none",
     borderRadius: "5px",
-    transition: "background-color 0.2s",
+    padding: "6px 12px",
     cursor: "pointer",
   },
-  editIcon: {
-    position: "absolute",
-    top: "10px",
-    right: "10px",
-    padding: "4px",
+  deleteButton: {
+    backgroundColor: "#e53935",
+    color: "#fff",
+    border: "none",
     borderRadius: "5px",
-    transition: "background-color 0.2s",
+    padding: "6px 12px",
     cursor: "pointer",
   },
 };
