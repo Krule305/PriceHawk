@@ -1,8 +1,9 @@
 export default function ProductCard({ product, onEdit, onDelete }) {
   const {
     name,
-    urls,
+    urls = [],
     targetPrice,
+    scrapedPrice,
     createdAt,
     imageUrl,
   } = product;
@@ -12,12 +13,11 @@ export default function ProductCard({ product, onEdit, onDelete }) {
       ? createdAt.toDate().toLocaleDateString()
       : "Nepoznat datum";
 
-  const getShortUrl = (url) => {
+  const getShopName = (url) => {
     try {
-      const u = new URL(url);
-      return `${u.hostname}/${u.pathname.split("/").slice(1, 3).join("/")}`;
+      return new URL(url).hostname.replace("www.", "");
     } catch {
-      return url;
+      return "Nepoznata trgovina";
     }
   };
 
@@ -31,41 +31,46 @@ export default function ProductCard({ product, onEdit, onDelete }) {
         />
       </div>
 
-      <div style={styles.content}>
-        <h4 style={{ marginBottom: "0.5rem" }}>
-          {typeof name === "string" ? name : "Nepoznato ime"}
-        </h4>
-        <p><strong>Dodano:</strong> {formattedDate}</p>
+      <div style={styles.info}>
+        <div style={styles.topContent}>
+          <p style={{ fontWeight: "bold", fontSize: "1.1rem", marginBottom: "0.5rem" }}>
+            {typeof name === "string" ? name : "Nepoznato ime"}
+          </p>
 
-        {!isNaN(parseFloat(targetPrice)) && (
-          <p><strong>Željena cijena:</strong> {parseFloat(targetPrice).toFixed(2)} €</p>
-        )}
+          <p>Dodano: {formattedDate}</p>
+          <p>Željena cijena: {targetPrice?.toFixed(2)} €</p>
+          {typeof scrapedPrice === "number" && (
+            <p>Najniža cijena: {scrapedPrice.toFixed(2)} €</p>
+          )}
 
-        {Array.isArray(urls) && urls.length > 0 && (
-          <div style={{ marginTop: "0.75rem" }}>
-            <p style={{ marginBottom: "0.25rem" }}>
-              <strong>Praćene trgovine:</strong>
-            </p>
-            <ul style={styles.urlList}>
-              {urls.map((url, i) => (
-                <li key={i} style={styles.urlItem}>
-                  <a href={url} target="_blank" rel="noreferrer">
-                    {getShortUrl(url)}
+          {urls.length > 0 && (
+            <div style={{ marginTop: "0.5rem" }}>
+              Praćene trgovine:
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem", marginTop: "0.2rem" }}>
+                {urls.map((url, index) => (
+                  <a
+                    key={index}
+                    href={url}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ fontSize: "0.9rem", color: "#1976d2", textDecoration: "none" }}
+                  >
+                    {getShopName(url)}
                   </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
 
-      <div style={styles.actions}>
-        <button onClick={() => onEdit && onEdit(product)} style={styles.editButton}>
-          Uredi
-        </button>
-        <button onClick={() => onDelete && onDelete(product.id)} style={styles.deleteButton}>
-          Obriši
-        </button>
+        <div style={styles.actions}>
+          <button onClick={() => onEdit(product)} style={styles.editButton}>
+            Uredi
+          </button>
+          <button onClick={() => onDelete(product.id)} style={styles.deleteButton}>
+            Obriši
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -73,64 +78,57 @@ export default function ProductCard({ product, onEdit, onDelete }) {
 
 const styles = {
   card: {
-    width: "300px",
-    height: "520px", // fiksna visina
+    width: "250px",
+    minHeight: "450px",
     border: "1px solid #ccc",
     borderRadius: "10px",
     overflow: "hidden",
     backgroundColor: "#fff",
     boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
     textAlign: "left",
-    position: "relative",
     display: "flex",
     flexDirection: "column",
   },
   imageContainer: {
-    height: "220px",
-    backgroundColor: "white",
+    height: "200px",
+    backgroundColor: "#f0f0f0",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   image: {
-    width: "100%",
-    height: "100%",
-    objectFit: "scale-down",
+    maxHeight: "180px",
+    maxWidth: "100%",
+    objectFit: "contain",
   },
-  content: {
+  info: {
     padding: "1rem",
-    fontSize: "0.9rem",
-    flex: 1,
-    overflowY: "auto",
-  },
-  urlList: {
-    paddingLeft: "1.2rem",
-    margin: 0,
-  },
-  urlItem: {
-    fontSize: "0.9rem",
-    marginBottom: "4px",
-    listStyleType: "disc",
+    fontSize: "0.95rem",
+    lineHeight: "1.5",
+    flexGrow: 1,
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "space-between", // rasporedi tekst gore, gumbe dolje
   },
   actions: {
-    padding: "0.75rem 1rem",
-    borderTop: "1px solid #eee",
     display: "flex",
-    justifyContent: "flex-end",
-    gap: "0.5rem",
-    backgroundColor: "#fafafa",
+    justifyContent: "space-between",
+    marginTop: "1rem",
   },
   editButton: {
     backgroundColor: "#1976d2",
     color: "#fff",
     border: "none",
+    padding: "0.4rem 0.8rem",
     borderRadius: "5px",
-    padding: "6px 12px",
     cursor: "pointer",
   },
   deleteButton: {
     backgroundColor: "#e53935",
     color: "#fff",
     border: "none",
+    padding: "0.4rem 0.8rem",
     borderRadius: "5px",
-    padding: "6px 12px",
     cursor: "pointer",
   },
 };

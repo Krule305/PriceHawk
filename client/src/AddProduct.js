@@ -52,9 +52,9 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
     newUrls[index] = value;
     setUrls(newUrls);
 
-    // Ako je prvi URL i korisnik je upravo zalijepio link
-    if (value.startsWith("http")) {
-      scrapeAllUrls([value]);
+    const validUrls = newUrls.filter((url) => url.startsWith("http"));
+    if (validUrls.length) {
+      scrapeAllUrls(validUrls);
     }
   };
 
@@ -63,9 +63,13 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
   };
 
   const handleRemoveUrl = (index) => {
-    if (urls.length <= 1) return;
+    if (urls.length <= 1) return; // zabrani brisanje zadnjeg
     const newUrls = urls.filter((_, i) => i !== index);
     setUrls(newUrls);
+    const validUrls = newUrls.filter((url) => url.startsWith("http"));
+    if (validUrls.length) {
+      scrapeAllUrls(validUrls);
+    }
   };
 
   const handleSave = () => {
@@ -123,15 +127,7 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
 
       <label>URL proizvoda:</label>
       {urls.map((url, i) => (
-        <div
-          key={i}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            marginBottom: "0.5rem",
-          }}
-        >
+        <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
           <input
             value={url}
             onChange={(e) => handleUrlChange(i, e.target.value)}
@@ -142,12 +138,7 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
             <button
               type="button"
               onClick={() => handleRemoveUrl(i)}
-              style={{
-                background: "transparent",
-                border: "none",
-                cursor: "pointer",
-                padding: "4px",
-              }}
+              style={{ background: "transparent", border: "none", cursor: "pointer", padding: "4px" }}
               title="Ukloni URL"
             >
               <FiX size={20} color="#d32f2f" />
@@ -169,18 +160,14 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
 
       {scrapedData.price && (
         <p style={{ marginTop: "0.5rem", color: "#555" }}>
-          <strong>Najniža pronađena cijena:</strong> {scrapedData.price} €
+          <strong>Najniža pronađena cijena:</strong> {scrapedData.price.toFixed(2)} €
         </p>
       )}
 
       {scrapedData.imageUrl && (
         <>
           <label>Prepoznata slika:</label>
-          <img
-            src={scrapedData.imageUrl}
-            alt="Scrapana"
-            className="preview-image"
-          />
+          <img src={scrapedData.imageUrl} alt="Scrapana" className="preview-image" />
         </>
       )}
 

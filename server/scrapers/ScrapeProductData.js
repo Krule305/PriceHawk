@@ -2,8 +2,21 @@ const puppeteer = require("puppeteer");
 
 function parsePrice(priceString) {
   if (!priceString) return null;
-  const cleaned = priceString.replace(/[^\d,\.]/g, "").replace(",", ".");
-  const parsed = parseFloat(cleaned);
+
+  // Nađi broj koji je uz HRK ili €
+  const match = priceString.match(/(\d{1,5}(?:[.,]\d{2}))\s*(€|HRK|eur|EUR)/i);
+  if (!match) return null;
+
+  let numberStr = match[1];
+
+  // Ako je broj u formatu 1.083,39 (europski), makni točku i zamijeni zarez točkom
+  if (numberStr.includes(".") && numberStr.includes(",")) {
+    numberStr = numberStr.replace(/\./g, "").replace(",", ".");
+  } else {
+    numberStr = numberStr.replace(",", ".");
+  }
+
+  const parsed = parseFloat(numberStr);
   return isNaN(parsed) ? null : parsed;
 }
 
@@ -11,6 +24,7 @@ async function scrapeSinglePage(page, url) {
   try {
     await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 });
 
+    // === Slika ===
     let imageUrl = await page
       .$eval('meta[property="og:image"]', el => el.content)
       .catch(() => null);
@@ -27,7 +41,9 @@ async function scrapeSinglePage(page, url) {
       });
     }
 
+    // === Cijena ===
     const priceSelectors = [
+      '#our_price_display',       
       '[itemprop="price"]',
       '[class*="price__item"]',
       '[class*="price"]',
@@ -41,6 +57,7 @@ async function scrapeSinglePage(page, url) {
       '[data-price-final]',
       ".price-final",
     ];
+    
 
     let rawPrice = null;
     for (const selector of priceSelectors) {
@@ -65,36 +82,19 @@ async function scrapeSinglePage(page, url) {
   }
 }
 
-async function scrapeProductData(req, res) {
-  const { urls } = req.body;
-  if (!Array.isArray(urls) || urls.length === 0) {
-    return res.status(400).json({ error: "URL lista je prazna ili nevažeća." });
-  }
-
+// ❗ Ovo exportamo kao običnu funkciju
+async function scrapeMultiple(urls) {
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();
+  const results = [];
 
-  try {
-    const results = [];
-
-    for (const url of urls) {
-      const data = await scrapeSinglePage(page, url);
-      results.push(data);
-    }
-
-    const validPrices = results.filter(r => r.price !== null);
-    if (validPrices.length === 0) {
-      return res.json({ price: null, imageUrl: null });
-    }
-
-    const lowest = validPrices.reduce((min, curr) => curr.price < min.price ? curr : min);
-    return res.json({ price: lowest.price, imageUrl: lowest.imageUrl });
-  } catch (error) {
-    console.error("❌ Glavna greška:", error.message);
-    return res.status(500).json({ error: "Greška u scrapanju." });
-  } finally {
-    await browser.close();
+  for (const url of urls) {
+    const data = await scrapeSinglePage(page, url);
+    results.push(data);
   }
+
+  await browser.close();
+  return results;
 }
 
-module.exports = scrapeProductData;
+module.exports = scrapeMultiple;

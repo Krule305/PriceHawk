@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const scrapeProductData = require("../ScrapeProductData");
+const scrapeProductData = require("../scrapers/ScrapeProductData");
 
 router.post("/scrape-product", async (req, res) => {
   const { urls } = req.body;
@@ -9,25 +9,23 @@ router.post("/scrape-product", async (req, res) => {
     return res.status(400).json({ error: "Lista URL-ova je obavezna." });
   }
 
-  let allResults = [];
+  try {
+    const allResults = await scrapeProductData(urls);
 
-  for (const url of urls) {
-    const result = await scrapeProductData(url);
-    allResults.push({ url, ...result });
+    const validPrices = allResults.map(r => r.price).filter(p => typeof p === "number");
+    const minPrice = validPrices.length ? Math.min(...validPrices) : null;
+
+    const imageUrl = allResults.find(r => r.imageUrl)?.imageUrl || null;
+
+    res.json({
+      imageUrl,
+      price: minPrice,
+      allResults,
+    });
+  } catch (err) {
+    console.error("Greška u backend route:", err.message);
+    res.status(500).json({ error: "Greška kod scrapanja" });
   }
-
-  // pronađi najmanju cijenu
-  const validPrices = allResults.map(r => r.price).filter(p => typeof p === "number");
-  const minPrice = validPrices.length ? Math.min(...validPrices) : null;
-
-  // pronađi prvu valjanu sliku (ili null)
-  const imageUrl = allResults.find(r => r.imageUrl)?.imageUrl || null;
-
-  res.json({
-    imageUrl,
-    price: minPrice,
-    allResults,
-  });
 });
 
 module.exports = router;
