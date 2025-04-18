@@ -3,20 +3,12 @@ const puppeteer = require("puppeteer");
 function parsePrice(priceString) {
   if (!priceString) return null;
 
-  // Nađi broj koji je uz HRK ili €
-  const match = priceString.match(/(\d{1,5}(?:[.,]\d{2}))\s*(€|HRK|eur|EUR)/i);
-  if (!match) return null;
+  const cleaned = priceString
+    .replace(/\./g, "") // makni točke za tisućice
+    .replace(",", ".") // decimalni zarez → točka
+    .replace(/[^\d.]/g, ""); // makni sve osim brojeva i točke
 
-  let numberStr = match[1];
-
-  // Ako je broj u formatu 1.083,39 (europski), makni točku i zamijeni zarez točkom
-  if (numberStr.includes(".") && numberStr.includes(",")) {
-    numberStr = numberStr.replace(/\./g, "").replace(",", ".");
-  } else {
-    numberStr = numberStr.replace(",", ".");
-  }
-
-  const parsed = parseFloat(numberStr);
+  const parsed = parseFloat(cleaned);
   return isNaN(parsed) ? null : parsed;
 }
 
@@ -24,7 +16,60 @@ async function scrapeSinglePage(page, url) {
   try {
     await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 });
 
-    // === Slika ===
+    const hostname = new URL(url).hostname;
+
+    // ======== AMAZON ========
+    if (hostname.includes("amazon")) {
+      const imageUrl = await page
+        .$eval("#landingImage", img => img.src)
+        .catch(() => null);
+
+      let price = await page
+        .$eval("span.a-price .a-offscreen", el => el.textContent.trim())
+        .catch(() => null);
+
+      return {
+        url,
+        imageUrl,
+        price: parsePrice(price),
+      };
+    }
+
+    // ======== ZALANDO ========
+    if (hostname.includes("zalando")) {
+      const imageUrl = await page
+        .$eval("img[loading='eager']", img => img.src)
+        .catch(() => null);
+
+      let price = await page
+        .$eval("[data-testid='price']", el => el.textContent.trim())
+        .catch(() => null);
+
+      return {
+        url,
+        imageUrl,
+        price: parsePrice(price),
+      };
+    }
+
+    // ======== ASOS ========
+    if (hostname.includes("asos")) {
+      const imageUrl = await page
+        .$eval("img.gallery-image", img => img.src)
+        .catch(() => null);
+
+      let price = await page
+        .$eval("[data-testid='product-price']", el => el.textContent.trim())
+        .catch(() => null);
+
+      return {
+        url,
+        imageUrl,
+        price: parsePrice(price),
+      };
+    }
+
+    // ======== GENERIČKI FALLBACK ========
     let imageUrl = await page
       .$eval('meta[property="og:image"]', el => el.content)
       .catch(() => null);
@@ -41,9 +86,7 @@ async function scrapeSinglePage(page, url) {
       });
     }
 
-    // === Cijena ===
     const priceSelectors = [
-      '#our_price_display',       
       '[itemprop="price"]',
       '[class*="price__item"]',
       '[class*="price"]',
@@ -57,7 +100,6 @@ async function scrapeSinglePage(page, url) {
       '[data-price-final]',
       ".price-final",
     ];
-    
 
     let rawPrice = null;
     for (const selector of priceSelectors) {
@@ -68,7 +110,7 @@ async function scrapeSinglePage(page, url) {
     if (!rawPrice) {
       rawPrice = await page.evaluate(() => {
         const text = document.body.innerText;
-        const match = text.match(/(\d{1,5}[,.]\d{2})\s*(€)/i);
+        const match = text.match(/(\d{1,5}[,.]\d{2})\s*(€|EUR)/i);
         return match ? match[0] : null;
       });
     }
@@ -82,7 +124,6 @@ async function scrapeSinglePage(page, url) {
   }
 }
 
-// ❗ Ovo exportamo kao običnu funkciju
 async function scrapeMultiple(urls) {
   const browser = await puppeteer.launch({ headless: true });
   const page = await browser.newPage();

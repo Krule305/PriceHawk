@@ -141,6 +141,15 @@ export default function Dashboard() {
 
   if (loading) return <p>Učitavanje...</p>;
 
+  const filteredProducts = products.filter(
+    (p) => selectedCategory === "Sve" || p.category === selectedCategory
+  );
+
+  const rows = [];
+  for (let i = 0; i < filteredProducts.length; i += 6) {
+    rows.push(filteredProducts.slice(i, i + 6));
+  }
+
   return (
     <div style={{ textAlign: "center", marginTop: "3rem" }}>
       <div style={styles.header}>
@@ -196,17 +205,18 @@ export default function Dashboard() {
               ))}
             </div>
 
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                justifyContent: "center",
-                gap: "1rem",
-              }}
-            >
-              {products
-                .filter((p) => selectedCategory === "Sve" || p.category === selectedCategory)
-                .map((product) => (
+            {rows.map((row, rowIndex) => (
+              <div
+                key={rowIndex}
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: "1rem",
+                  marginBottom: "1.5rem",
+                  flexWrap: "nowrap",
+                }}
+              >
+                {row.map((product) => (
                   <ProductCard
                     key={product.id}
                     product={product}
@@ -216,8 +226,9 @@ export default function Dashboard() {
                     }}
                     onDelete={(id) => setProductToDelete(id)}
                   />
-              ))}
-            </div>
+                ))}
+              </div>
+            ))}
           </>
         )}
       </div>

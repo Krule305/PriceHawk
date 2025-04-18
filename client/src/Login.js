@@ -1,45 +1,47 @@
-// Login.js
 import { useState } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "./firebase";
 import { useNavigate, Link } from "react-router-dom";
-import { toast } from "react-toastify";
+import "./auth.css";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      toast.success("Uspješna prijava!");
-      navigate("/");
-    } catch (error) {
-      toast.error(`Greška: ${error.message}`);
+      navigate("/dashboard");
+    } catch (err) {
+      alert("Greška pri prijavi: " + err.message);
     }
   };
 
   return (
-    <form onSubmit={handleLogin}>
-      <h2>Prijava</h2>
-      <input
-        type="email"
-        placeholder="Email"
-        onChange={(e) => setEmail(e.target.value)}
-        required
-      />
-      <input
-        type="password"
-        placeholder="Lozinka"
-        onChange={(e) => setPassword(e.target.value)}
-        required
-      />
-      <button type="submit">Prijavi se</button>
-      <p>
-        Nemate račun? <Link to="/register">Registriraj se</Link>
-      </p>
-    </form>
+    <div className="auth-container">
+      <form onSubmit={handleSubmit} className="auth-form">
+        <h2>Prijava</h2>
+        <input
+          type="email"
+          placeholder="Email adresa"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Lozinka"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button type="submit">Prijavi se</button>
+        <p className="auth-switch">
+          Nemate račun? <Link to="/register">Registrirajte se</Link>
+        </p>
+      </form>
+    </div>
   );
 }
