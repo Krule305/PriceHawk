@@ -6,9 +6,11 @@ function parsePrice(priceString) {
   const cleaned = priceString
     .replace(/\./g, "") // makni točke za tisućice
     .replace(",", ".") // decimalni zarez → točka
-    .replace(/[^\d.]/g, ""); // makni sve osim brojeva i točke
+    .replace(/[^\d.]/g, ""); // sve osim brojeva i točke
 
-  const parsed = parseFloat(cleaned);
+  const match = cleaned.match(/^\d+(\.\d{1,2})?/);
+  const parsed = match ? parseFloat(match[0]) : null;
+
   return isNaN(parsed) ? null : parsed;
 }
 
@@ -18,21 +20,38 @@ async function scrapeSinglePage(page, url) {
 
     const hostname = new URL(url).hostname;
 
-    // ======== AMAZON ========
+    // === AMAZON ===
     if (hostname.includes("amazon")) {
       const imageUrl = await page
         .$eval("#landingImage", img => img.src)
         .catch(() => null);
 
-      let price = await page
+      const price = await page
         .$eval("span.a-price .a-offscreen", el => el.textContent.trim())
         .catch(() => null);
 
-      return {
-        url,
-        imageUrl,
-        price: parsePrice(price),
-      };
+      return { url, imageUrl, price: parsePrice(price) };
+    }
+
+    // === EBAY ===
+    if (hostname.includes("ebay")) {
+      const imageUrl = await page
+        .$eval("#icImg", img => img.src)
+        .catch(() => null);
+
+      let price = await page
+        .$eval(".x-price-approx__price, .x-price-approx__value, .display-price", el => el.textContent.trim())
+        .catch(() => null);
+
+      // fallback ako nisu radili selektori
+      if (!price) {
+        price = await page.evaluate(() => {
+          const match = document.body.innerText.match(/(\d{1,4}[,.]\d{2})\s*(€|EUR|USD|\$)/i);
+          return match ? match[0] : null;
+        });
+      }
+
+      return { url, imageUrl, price: parsePrice(price) };
     }
 
     // ======== ZALANDO ========

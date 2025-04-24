@@ -90,14 +90,14 @@ const styles = {
     flexDirection: "column",
   },
   imageContainer: {
-    height: "200px",
-    backgroundColor: "#f0f0f0",
+    height: "225px",
+    backgroundColor: "white",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
   },
   image: {
-    maxHeight: "180px",
+    maxHeight: "185px",
     maxWidth: "100%",
     objectFit: "contain",
   },

@@ -5,11 +5,11 @@ import {
   getDoc,
   collection,
   addDoc,
-  getDocs,
   updateDoc,
   deleteDoc,
+  onSnapshot,
 } from "firebase/firestore";
-import { signOut } from "firebase/auth";
+import { signOut, onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import AddProduct from "./AddProduct";
 import ProductCard from "./ProductCard";
@@ -27,54 +27,32 @@ export default function Dashboard() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const user = auth.currentUser;
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        try {
-          const docRef = doc(db, "users", user.uid);
-          const docSnap = await getDoc(docRef);
-          if (docSnap.exists()) {
-            setUsername(docSnap.data().username);
-          }
-        } catch (error) {
-          console.error("Greška pri dohvaćanju korisnika:", error);
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          setUsername(docSnap.data().username);
         }
-      }
-    };
 
-    const fetchProducts = async () => {
-      const user = auth.currentUser;
-      if (user) {
-        try {
-          const productsRef = collection(db, "users", user.uid, "products");
-          const querySnapshot = await getDocs(productsRef);
-          const productsList = querySnapshot.docs.map((doc) => ({
+        const productsRef = collection(db, "users", user.uid, "products");
+        const unsubscribeProducts = onSnapshot(productsRef, (snapshot) => {
+          const productsList = snapshot.docs.map((doc) => ({
             id: doc.id,
             ...doc.data(),
           }));
           setProducts(productsList);
-        } catch (error) {
-          console.error("Greška pri dohvaćanju proizvoda:", error);
-        }
+          setLoading(false);
+        });
+
+        return () => unsubscribeProducts(); // cleanup
+      } else {
+        navigate("/login");
       }
-      setLoading(false);
-    };
+    });
 
-    fetchUserData();
-    fetchProducts();
-  }, []);
-
-  const refreshProducts = async () => {
-    const user = auth.currentUser;
-    if (!user) return;
-    const productsRef = collection(db, "users", user.uid, "products");
-    const querySnapshot = await getDocs(productsRef);
-    const productsList = querySnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    setProducts(productsList);
-  };
+    return () => unsubscribe();
+  }, [navigate]);
 
   const handleLogout = async () => {
     await signOut(auth);
@@ -101,14 +79,12 @@ export default function Dashboard() {
         toast.success("Proizvod je uspješno dodan!");
       }
 
-      await refreshProducts();
+      setEditingProduct(null);
+      setIsModalOpen(false);
     } catch (error) {
       console.error("Greška pri spremanju proizvoda:", error);
       toast.error("Nešto je pošlo po zlu. Pokušaj ponovno.");
     }
-
-    setEditingProduct(null);
-    setIsModalOpen(false);
   };
 
   const handleDeleteProduct = async (productId) => {
@@ -119,7 +95,6 @@ export default function Dashboard() {
       const productRef = doc(db, "users", user.uid, "products", productId);
       await deleteDoc(productRef);
       toast.success("Proizvod je obrisan.");
-      await refreshProducts();
     } catch (error) {
       console.error("Greška pri brisanju proizvoda:", error);
       toast.error("Brisanje nije uspjelo.");
@@ -140,15 +115,6 @@ export default function Dashboard() {
   const allCategories = ["Sve", ...new Set(products.map((p) => p.category || "Neodređeno"))];
 
   if (loading) return <p>Učitavanje...</p>;
-
-  const filteredProducts = products.filter(
-    (p) => selectedCategory === "Sve" || p.category === selectedCategory
-  );
-
-  const rows = [];
-  for (let i = 0; i < filteredProducts.length; i += 6) {
-    rows.push(filteredProducts.slice(i, i + 6));
-  }
 
   return (
     <div style={{ textAlign: "center", marginTop: "3rem" }}>
@@ -205,18 +171,17 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {rows.map((row, rowIndex) => (
-              <div
-                key={rowIndex}
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  gap: "1rem",
-                  marginBottom: "1.5rem",
-                  flexWrap: "nowrap",
-                }}
-              >
-                {row.map((product) => (
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                gap: "1rem",
+              }}
+            >
+              {products
+                .filter((p) => selectedCategory === "Sve" || p.category === selectedCategory)
+                .map((product) => (
                   <ProductCard
                     key={product.id}
                     product={product}
@@ -226,9 +191,8 @@ export default function Dashboard() {
                     }}
                     onDelete={(id) => setProductToDelete(id)}
                   />
-                ))}
-              </div>
-            ))}
+              ))}
+            </div>
           </>
         )}
       </div>
