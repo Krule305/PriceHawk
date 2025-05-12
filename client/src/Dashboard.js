@@ -15,6 +15,7 @@ import AddProduct from "./AddProduct";
 import ProductCard from "./ProductCard";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import { toast } from "react-toastify";
+import "./Dashboard.css"; // make sure CSS is imported
 
 export default function Dashboard() {
   const [username, setUsername] = useState("");
@@ -24,6 +25,7 @@ export default function Dashboard() {
   const [editingProduct, setEditingProduct] = useState(null);
   const [productToDelete, setProductToDelete] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("Sve");
+  const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,7 +47,7 @@ export default function Dashboard() {
           setLoading(false);
         });
 
-        return () => unsubscribeProducts(); // cleanup
+        return () => unsubscribeProducts();
       } else {
         navigate("/login");
       }
@@ -117,84 +119,65 @@ export default function Dashboard() {
   if (loading) return <p>Učitavanje...</p>;
 
   return (
-    <div style={{ textAlign: "center", marginTop: "3rem" }}>
-      <div style={styles.header}>
-        <h2 style={styles.welcome}>Dobrodošao/la, {username}!</h2>
-        <button onClick={handleLogout} style={styles.logout}>Odjava</button>
+    <div className="dashboard-container">
+      <div className="dashboard-header">
+        <h2 className="dashboard-welcome">Dobrodošao/la, {username}!</h2>
+        <button onClick={handleLogout} className="dashboard-logout">Odjava</button>
       </div>
 
-      <div style={{ marginTop: "6rem" }}>
-        {products.length === 0 ? (
-          <>
-            <p style={{ fontSize: "1.2rem", color: "#777" }}>
-              Nemate niti jedan proizvod za praćenje.
-            </p>
-            <button
-              onClick={() => {
-                setEditingProduct(null);
+      <div className="dashboard-top">
+        <div className="left-controls">
+          <button
+            onClick={() => {
+              setEditingProduct(null);
+              setIsModalOpen(true);
+            }}
+            className="add-product-btn"
+          >
+            Dodaj novi proizvod
+          </button>
+        </div>
+
+        <div className="right-controls">
+          <input
+            type="text"
+            placeholder="Pretraži po nazivu..."
+            className="search-input"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
+      <div className="category-buttons">
+        {allCategories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setSelectedCategory(cat)}
+            className={`category-button ${selectedCategory === cat ? "active" : ""}`}
+          >
+            {cat} ({categoryCounts[cat] || 0})
+          </button>
+        ))}
+      </div>
+
+      <div className="product-grid">
+        {products
+          .filter((p) =>
+            (selectedCategory === "Sve" || p.category === selectedCategory) &&
+            (p.name?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+          )
+          .map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              onEdit={(p) => {
+                setEditingProduct(p);
                 setIsModalOpen(true);
               }}
-              style={styles.addButton}
-            >
-              ➕ Dodaj proizvod
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              onClick={() => {
-                setEditingProduct(null);
-                setIsModalOpen(true);
-              }}
-              style={styles.addButton}
-            >
-              ➕ Dodaj novi proizvod
-            </button>
-
-            <div style={{ margin: "1.5rem 0" }}>
-              {allCategories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  style={{
-                    marginRight: "0.5rem",
-                    padding: "0.5rem 1rem",
-                    backgroundColor: selectedCategory === cat ? "#1976d2" : "#eee",
-                    color: selectedCategory === cat ? "#fff" : "#000",
-                    border: "none",
-                    borderRadius: "5px",
-                    cursor: "pointer",
-                  }}
-                >
-                  {cat} ({categoryCounts[cat] || 0})
-                </button>
-              ))}
-            </div>
-
-            <div
-              style={{
-                display: "flex",
-                flexWrap: "wrap",
-                justifyContent: "center",
-                gap: "1rem",
-              }}
-            >
-              {products
-                .filter((p) => selectedCategory === "Sve" || p.category === selectedCategory)
-                .map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    onEdit={(p) => {
-                      setEditingProduct(p);
-                      setIsModalOpen(true);
-                    }}
-                    onDelete={(id) => setProductToDelete(id)}
-                  />
-              ))}
-            </div>
-          </>
-        )}
+              onDelete={(id) => setProductToDelete(id)}
+            />
+        ))}
       </div>
 
       <AddProduct
@@ -218,35 +201,3 @@ export default function Dashboard() {
     </div>
   );
 }
-
-const styles = {
-  header: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "0 2rem",
-    position: "absolute",
-    top: 20,
-    left: 0,
-    right: 0,
-  },
-  welcome: {
-    margin: 0,
-  },
-  logout: {
-    padding: "0.5rem 1rem",
-    backgroundColor: "#f44336",
-    color: "#fff",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-  },
-  addButton: {
-    padding: "0.5rem 1rem",
-    backgroundColor: "#eee",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-    transition: "background-color 0.2s",
-  },
-};

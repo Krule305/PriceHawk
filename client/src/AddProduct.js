@@ -63,7 +63,7 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
   };
 
   const handleRemoveUrl = (index) => {
-    if (urls.length <= 1) return; // zabrani brisanje zadnjeg
+    if (urls.length <= 1) return;
     const newUrls = urls.filter((_, i) => i !== index);
     setUrls(newUrls);
     const validUrls = newUrls.filter((url) => url.startsWith("http"));
@@ -77,7 +77,6 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
       alert("Naziv i barem jedan URL su obavezni.");
       return;
     }
-
     if (isScraping) {
       alert("Pričekaj da scraping završi.");
       return;
@@ -100,6 +99,8 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
     onSave(newProduct);
   };
 
+  if (!isOpen) return null;
+
   return (
     <Modal
       isOpen={isOpen}
@@ -110,70 +111,73 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
     >
       <h2>{initialData ? "Uredi proizvod" : "Dodaj novi proizvod"}</h2>
 
-      <label>Naziv proizvoda:</label>
-      <input value={name} onChange={(e) => setName(e.target.value)} />
+      <div className="form-section">
+        <label>URL proizvoda:</label>
+        {urls.map((url, i) => (
+          <div key={i} className="url-row">
+            <input
+              value={url}
+              onChange={(e) => handleUrlChange(i, e.target.value)}
+              placeholder="https://example.com/proizvod"
+            />
+            {urls.length > 1 && (
+              <button
+                type="button"
+                onClick={() => handleRemoveUrl(i)}
+                className="remove-url"
+              >
+                <FiX size={18} />
+              </button>
+            )}
+          </div>
+        ))}
+        <button onClick={handleAddUrl} className="add-url">+ Dodaj još jedan URL</button>
+      </div>
 
-      <label>Kategorija:</label>
-      <select value={category} onChange={(e) => setCategory(e.target.value)}>
-        <option value="">-- Odaberi --</option>
-        <option value="Elektronika">Elektronika</option>
-        <option value="Odjeća/obuća">Odjeća/obuća</option>
-        <option value="Kozmetika">Kozmetika</option>
-        <option value="Sport">Sport</option>
-        <option value="Knjige">Knjige</option>
-        <option value="Dodaci">Dodaci</option>
-        <option value="Ostalo">Ostalo</option>
-      </select>
+      <div className="form-section">
+        <label>Naziv proizvoda:</label>
+        <input value={name} onChange={(e) => setName(e.target.value)} />
+      </div>
 
-      <label>URL proizvoda:</label>
-      {urls.map((url, i) => (
-        <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
-          <input
-            value={url}
-            onChange={(e) => handleUrlChange(i, e.target.value)}
-            placeholder="https://example.com/proizvod"
-            style={{ flex: 1 }}
-          />
-          {urls.length > 1 && (
-            <button
-              type="button"
-              onClick={() => handleRemoveUrl(i)}
-              style={{ background: "transparent", border: "none", cursor: "pointer", padding: "4px" }}
-              title="Ukloni URL"
-            >
-              <FiX size={20} color="#d32f2f" />
-            </button>
-          )}
-        </div>
-      ))}
+      <div className="form-section">
+        <label>Kategorija:</label>
+        <select value={category} onChange={(e) => setCategory(e.target.value)}>
+          <option value="">-- Odaberi --</option>
+          <option value="Elektronika">Elektronika</option>
+          <option value="Odjeća/obuća">Odjeća/obuća</option>
+          <option value="Kozmetika">Kozmetika</option>
+          <option value="Sport">Sport</option>
+          <option value="Knjige">Knjige</option>
+          <option value="Dodaci">Dodaci</option>
+          <option value="Ostalo">Ostalo</option>
+        </select>
+      </div>
 
-      <button onClick={handleAddUrl} style={{ marginTop: "0.5rem" }}>
-        ➕ Dodaj još jedan URL
-      </button>
-
-      <label>Željena cijena (€):</label>
-      <input
-        type="number"
-        value={targetPrice}
-        onChange={(e) => setTargetPrice(e.target.value)}
-      />
+      <div className="form-section">
+        <label>Željena cijena (€):</label>
+        <input
+          type="number"
+          value={targetPrice}
+          onChange={(e) => setTargetPrice(e.target.value)}
+        />
+      </div>
 
       {scrapedData.price && (
-        <p style={{ marginTop: "0.5rem", color: "#555" }}>
-          <strong>Najniža pronađena cijena:</strong> {scrapedData.price.toFixed(2)} €
+        <p className="scraped-price">
+          Najniža pronađena cijena: <strong>{scrapedData.price.toFixed(2)} €</strong>
         </p>
       )}
 
       {scrapedData.imageUrl && (
-        <>
+        <div className="image-preview">
           <label>Prepoznata slika:</label>
-          <img src={scrapedData.imageUrl} alt="Scrapana" className="preview-image" />
-        </>
+          <img src={scrapedData.imageUrl} alt="Scrapana" />
+        </div>
       )}
 
       <div className="modal-footer">
-        <button onClick={onClose}>Odustani</button>
-        <button onClick={handleSave} disabled={isScraping}>
+        <button onClick={onClose} className="cancel-btn">Odustani</button>
+        <button onClick={handleSave} className="save-btn" disabled={isScraping}>
           {isScraping ? "Čekam scraping..." : "Spremi"}
         </button>
       </div>
