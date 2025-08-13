@@ -6,22 +6,22 @@ const path = require("path");
 
 puppeteer.use(StealthPlugin());
 
-// // nađi Chrome binarku na Renderu ili lokalno
+// helper pauza (radi svugdje, ne ovisi o Puppeteer API-ju)
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// pronalazak Chrome-a: env → Render cache → lokalni puppeteer executable
 function resolveChromePath() {
   const envPath = process.env.PUPPETEER_EXECUTABLE_PATH;
   if (envPath && fs.existsSync(envPath)) return envPath;
 
   const roots = [
-    "/opt/render/.cache/puppeteer",                 
-    "/opt/render/project/.cache/puppeteer",         
-    path.join(process.cwd(), ".cache", "puppeteer") 
+    "/opt/render/.cache/puppeteer",
+    "/opt/render/project/.cache/puppeteer",
+    path.join(process.cwd(), ".cache", "puppeteer"),
   ];
-
-  const variants = [
-    "chrome-linux64/chrome",
-    "chrome-linux/chrome",
-    "chrome"
-  ];
+  const variants = ["chrome-linux64/chrome", "chrome-linux/chrome", "chrome"];
 
   for (const root of roots) {
     const chromeDir = path.join(root, "chrome");
@@ -34,13 +34,17 @@ function resolveChromePath() {
     }
   }
 
-  try { return executablePath(); } catch { return null; }
+  try {
+    return executablePath();
+  } catch {
+    return null;
+  }
 }
 
+// pokretanje preglednika s ispravno pronađenim executablePath-om
 async function launchBrowser() {
   const chromePath = resolveChromePath();
   if (!chromePath) throw new Error("Nisam uspio pronaći Chrome binarku (resolveChromePath).");
-
   console.log("Using Chrome at:", chromePath);
 
   return puppeteer.launch({
@@ -57,6 +61,7 @@ async function launchBrowser() {
   });
 }
 
+// parser cijene
 function parsePrice(priceString) {
   if (!priceString) return null;
   if (priceString.includes(".") && !priceString.includes(",")) {
@@ -67,11 +72,12 @@ function parsePrice(priceString) {
     const m = priceString.replace(/\./g, "").match(/(\d{1,5},\d{2})/);
     if (m) return parseFloat(m[1].replace(",", "."));
   }
-  const fallback = priceString.replace(/[^\d,\.]/g, "");
-  const parsed = parseFloat(fallback);
+  const fallback = priceString.replace(/[^\d.,]/g, "");
+  const parsed = parseFloat(fallback.replace(",", "."));
   return Number.isNaN(parsed) ? null : parsed;
 }
 
+// JSON-LD ekstrakcija
 async function extractJsonLd(page) {
   return page.evaluate(() => {
     const res = { price: null, image: null };
@@ -88,12 +94,13 @@ async function extractJsonLd(page) {
             if (!res.image && it.image) res.image = Array.isArray(it.image) ? it.image[0] : it.image;
           }
         }
-      } catch (_) {}
+      } catch {}
     }
     return res;
   });
 }
 
+// pokušaj prihvatiti cookie bannere
 async function tryAcceptCookies(page) {
   const quick = [
     "#onetrust-accept-btn-handler",
@@ -112,7 +119,7 @@ async function tryAcceptCookies(page) {
       const btn = await page.$(sel);
       if (btn) {
         await btn.click().catch(() => {});
-        await page.waitForTimeout(400);;
+        await delay(400);
         return;
       }
     } catch {}
@@ -123,13 +130,14 @@ async function tryAcceptCookies(page) {
       const txt = (await page.evaluate((e) => e.textContent || "", el)).toLowerCase();
       if (/(prihvati|slažem|accept|i agree|allow all|allow)/i.test(txt)) {
         await el.click().catch(() => {});
-        await page.waitForTimeout(400);
+        await delay(400);
         return;
       }
     }
   } catch {}
 }
 
+// lagani scroll radi lazy loada
 async function gentleScroll(page) {
   try {
     await page.evaluate(async () => {
@@ -149,6 +157,7 @@ async function gentleScroll(page) {
   } catch {}
 }
 
+// snapshot za debug
 async function debugSnapshot(page, url, why = "noprice") {
   try {
     const safe = url.replace(/[^a-z0-9]/gi, "_").slice(0, 80);
@@ -160,11 +169,12 @@ async function debugSnapshot(page, url, why = "noprice") {
   } catch {}
 }
 
+// scrape jedne stranice
 async function scrapeSinglePage(page, url) {
   try {
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
     await tryAcceptCookies(page);
-    await page.waitForTimeout(800);
+    await delay(800);
     await gentleScroll(page);
 
     const hostname = new URL(url).hostname;
@@ -174,8 +184,7 @@ async function scrapeSinglePage(page, url) {
       await page.waitForSelector("span.a-price .a-offscreen", { timeout: 10000 }).catch(() => null);
       const imageUrl = await page.$eval("#landingImage", (img) => img.src).catch(() => null);
       let priceText = await page.$eval("span.a-price .a-offscreen", (el) => el.textContent.trim()).catch(() => null);
-      const okFmt = priceText && /[.,]\d{2}/.test(priceText);
-      if (!okFmt) {
+      if (!(priceText && /[.,]\d{2}/.test(priceText))) {
         priceText = await page.evaluate(() => {
           const m = document.body.innerText.match(/(?:€|EUR|\$)?\s?(\d{1,4}[.,]\d{2})/);
           return m ? m[1] : null;
@@ -328,8 +337,8 @@ async function scrapeSinglePage(page, url) {
     ];
 
     let rawPrice = null;
-    for (const selector of priceSelectors) {
-      rawPrice = await page.$eval(selector, (el) => el.textContent.trim()).catch(() => null);
+    for (const sel of priceSelectors) {
+      rawPrice = await page.$eval(sel, (el) => el.textContent.trim()).catch(() => null);
       if (rawPrice && rawPrice.length > 1) break;
     }
     if (!rawPrice) {
@@ -352,22 +361,7 @@ async function scrapeSinglePage(page, url) {
 
 // scrape više URL-ova
 async function scrapeMultiple(urls) {
-  const chromePath = resolveChromePath();
-  console.log("Using Chrome at:", chromePath);
-
-  const browser = await puppeteer.launch({
-    headless: true,
-    executablePath: chromePath,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-      "--no-zygote",
-      "--single-process",
-    ],
-  });
-
+  const browser = await launchBrowser();
   const page = await browser.newPage();
 
   await page.setExtraHTTPHeaders({ "Accept-Language": "hr-HR,hr;q=0.9,en;q=0.8" });
