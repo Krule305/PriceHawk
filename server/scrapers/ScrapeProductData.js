@@ -6,25 +6,34 @@ const path = require("path");
 
 puppeteer.use(StealthPlugin());
 
-// Util funkcije 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// pronalazak Chrome binarke (Render cache → env → puppeteer executablePath)
+function resolveChromePath() {
+  if (process.env.PUPPETEER_EXECUTABLE_PATH) return process.env.PUPPETEER_EXECUTABLE_PATH;
+  const base = "/opt/render/.cache/puppeteer/chrome";
+  try {
+    const platforms = fs.readdirSync(base);
+    for (const p of platforms) {
+      const p1 = path.join(base, p, "chrome-linux64", "chrome");
+      if (fs.existsSync(p1)) return p1;
+      const p2 = path.join(base, p, "chrome");
+      if (fs.existsSync(p2)) return p2;
+    }
+  } catch (_) {}
+  return executablePath();
+}
 
 function parsePrice(priceString) {
   if (!priceString) return null;
-
-  // Točka kao decimala
   if (priceString.includes(".") && !priceString.includes(",")) {
-    const match = priceString.match(/(\d{1,4}\.\d{2})/);
-    if (match) return parseFloat(match[1]);
+    const m = priceString.match(/(\d{1,4}\.\d{2})/);
+    if (m) return parseFloat(m[1]);
   }
-
-  // Zarez kao decimala
   if (priceString.includes(",")) {
-    const match = priceString.replace(/\./g, "").match(/(\d{1,5},\d{2})/);
-    if (match) return parseFloat(match[1].replace(",", "."));
+    const m = priceString.replace(/\./g, "").match(/(\d{1,5},\d{2})/);
+    if (m) return parseFloat(m[1].replace(",", "."));
   }
-
-  // Fallback
   const fallback = priceString.replace(/[^\d,\.]/g, "");
   const parsed = parseFloat(fallback);
   return Number.isNaN(parsed) ? null : parsed;
@@ -75,7 +84,6 @@ async function tryAcceptCookies(page) {
       }
     } catch {}
   }
-
   try {
     const candidates = await page.$$("button, [role='button']");
     for (const el of candidates) {
@@ -119,11 +127,9 @@ async function debugSnapshot(page, url, why = "noprice") {
   } catch {}
 }
 
-// Scrape jedne stranice (specifični case-ovi + generički fallback)
 async function scrapeSinglePage(page, url) {
   try {
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
-
     await tryAcceptCookies(page);
     await delay(800);
     await gentleScroll(page);
@@ -133,22 +139,15 @@ async function scrapeSinglePage(page, url) {
     // Amazon
     if (hostname.includes("amazon")) {
       await page.waitForSelector("span.a-price .a-offscreen", { timeout: 10000 }).catch(() => null);
-
       const imageUrl = await page.$eval("#landingImage", (img) => img.src).catch(() => null);
-
-      let priceText = await page
-        .$eval("span.a-price .a-offscreen", (el) => el.textContent.trim())
-        .catch(() => null);
-
-      const isValidPriceFormat = priceText && /[.,]\d{2}/.test(priceText);
-      if (!isValidPriceFormat) {
-        console.warn("⚠️ Amazon: Neispravan format cijene, fallback.");
+      let priceText = await page.$eval("span.a-price .a-offscreen", (el) => el.textContent.trim()).catch(() => null);
+      const okFmt = priceText && /[.,]\d{2}/.test(priceText);
+      if (!okFmt) {
         priceText = await page.evaluate(() => {
-          const match = document.body.innerText.match(/(?:€|EUR|\$)?\s?(\d{1,4}[.,]\d{2})/);
-          return match ? match[1] : null;
+          const m = document.body.innerText.match(/(?:€|EUR|\$)?\s?(\d{1,4}[.,]\d{2})/);
+          return m ? m[1] : null;
         });
       }
-
       const price = parsePrice(priceText);
       if (price == null) await debugSnapshot(page, url, "amazon_noprice");
       return { url, imageUrl, price };
@@ -162,9 +161,8 @@ async function scrapeSinglePage(page, url) {
           document.querySelector("img");
         return img?.src || null;
       });
-
       const priceText = await page.evaluate(() => {
-        const selectors = [
+        const sels = [
           ".x-price-approx__price",
           ".x-price-approx__value",
           ".display-price",
@@ -172,14 +170,13 @@ async function scrapeSinglePage(page, url) {
           "span[itemprop='price']",
           "span.ux-textspans",
         ];
-        for (const sel of selectors) {
+        for (const sel of sels) {
           const el = document.querySelector(sel);
           if (el && /EUR\s?\d/i.test(el.innerText)) return el.innerText.trim();
         }
-        const match = document.body.innerText.match(/(EUR\s?\d{1,4}[.,]\d{2})/i);
-        return match ? match[1] : null;
+        const m = document.body.innerText.match(/(EUR\s?\d{1,4}[.,]\d{2})/i);
+        return m ? m[1] : null;
       });
-
       const price = parsePrice(priceText);
       if (price == null) await debugSnapshot(page, url, "ebay_noprice");
       return { url, imageUrl, price };
@@ -191,14 +188,12 @@ async function scrapeSinglePage(page, url) {
         const img = document.querySelector("img[fetchpriority='high']") || document.querySelector("img");
         return img?.src || null;
       });
-
       const priceTxt = await page.evaluate(() => {
         const el = document.querySelector("[data-testid='price']");
         if (el) return el.innerText.replace(/\n/g, " ").trim();
-        const match = document.body.innerText.match(/(\d{1,5}[.,]\d{2})\s*(€|EUR)/i);
-        return match ? match[0] : null;
+        const m = document.body.innerText.match(/(\d{1,5}[.,]\d{2})\s*(€|EUR)/i);
+        return m ? m[0] : null;
       });
-
       const price = parsePrice(priceTxt);
       if (price == null) await debugSnapshot(page, url, "zalando_noprice");
       return { url, imageUrl, price };
@@ -206,11 +201,9 @@ async function scrapeSinglePage(page, url) {
 
     // ASOS
     if (hostname.includes("asos")) {
-      const highResImageUrls = await page.evaluate(() => {
+      const hi = await page.evaluate(() => {
         try {
-          const raw = document
-            .querySelector("script")
-            .textContent.match(/window\.asos\.pdp\.config\.product\s*=\s*(\{.+\});/);
+          const raw = document.querySelector("script").textContent.match(/window\.asos\.pdp\.config\.product\s*=\s*(\{.+\});/);
           if (!raw) return [];
           const obj = JSON.parse(raw[1]);
           return obj.images.map((img) => img.url);
@@ -218,17 +211,11 @@ async function scrapeSinglePage(page, url) {
           return [];
         }
       });
-
-      const imageUrl =
-        highResImageUrls.length
-          ? highResImageUrls[0]
-          : await page.evaluate(() => document.querySelector("img.gallery-image")?.src || null);
-
+      const imageUrl = hi.length ? hi[0] : await page.evaluate(() => document.querySelector("img.gallery-image")?.src || null);
       const priceTxt = await page.evaluate(() => {
         const el = document.querySelector("[data-testid='product-price'], .product-hero-price, .current-price");
         return el?.textContent?.trim() || null;
       });
-
       const price = parsePrice(priceTxt);
       if (price == null) await debugSnapshot(page, url, "asos_noprice");
       return { url, imageUrl, price };
@@ -237,13 +224,11 @@ async function scrapeSinglePage(page, url) {
     // Links
     if (hostname.includes("links.hr")) {
       const ld = await extractJsonLd(page);
-
       let imageUrl =
         ld.image ||
         (await page.$eval('meta[property="og:image"]', (el) => el.content).catch(() => null)) ||
         (await page.$eval("img[itemprop='image']", (el) => el.src).catch(() => null)) ||
         (await page.$eval(".product-image img", (el) => el.src).catch(() => null));
-
       let priceText = ld.price;
       if (!priceText) {
         priceText =
@@ -255,7 +240,6 @@ async function scrapeSinglePage(page, url) {
             return m ? m[0] : null;
           }));
       }
-
       const price = parsePrice(priceText);
       if (price == null) await debugSnapshot(page, url, "links_noprice");
       return { url, imageUrl, price };
@@ -264,23 +248,21 @@ async function scrapeSinglePage(page, url) {
     // eKupi
     if (hostname.includes("ekupi")) {
       const imageUrl = await page.evaluate(() => {
-        const largeImg = document.querySelector("img[data-zoom-image]");
-        return largeImg?.getAttribute("data-zoom-image") || null;
+        const large = document.querySelector("img[data-zoom-image]");
+        return large?.getAttribute("data-zoom-image") || null;
       });
-
       const priceText = await page.evaluate(() => {
         const el = document.querySelector(".product-price, div.price");
         if (el && el.textContent.includes("€")) return el.textContent.trim();
-        const match = document.body.innerText.match(/(\d{1,4}[.,]\d{2})\s*€/);
-        return match ? match[0] : null;
+        const m = document.body.innerText.match(/(\d{1,4}[.,]\d{2})\s*€/);
+        return m ? m[0] : null;
       });
-
       const price = parsePrice(priceText);
       if (price == null) await debugSnapshot(page, url, "ekupi_noprice");
       return { url, imageUrl, price };
     }
 
-    // Generički fallback
+    // generički fallback
     let imageUrl = await page.$eval('meta[property="og:image"]', (el) => el.content).catch(() => null);
     if (!imageUrl) {
       imageUrl = await page.evaluate(() => {
@@ -317,12 +299,11 @@ async function scrapeSinglePage(page, url) {
       rawPrice = await page.$eval(selector, (el) => el.textContent.trim()).catch(() => null);
       if (rawPrice && rawPrice.length > 1) break;
     }
-
     if (!rawPrice) {
       rawPrice = await page.evaluate(() => {
         const text = document.body.innerText;
-        const match = text.match(/(\d{1,5}[.,]\d{2})\s*(€|EUR)/i);
-        return match ? match[0] : null;
+        const m = text.match(/(\d{1,5}[.,]\d{2})\s*(€|EUR)/i);
+        return m ? m[0] : null;
       });
     }
 
@@ -331,33 +312,38 @@ async function scrapeSinglePage(page, url) {
     return { url, imageUrl, price };
   } catch (err) {
     console.error(`❌ Greška za ${url}:`, err.message);
-    try {
-      await debugSnapshot(page, url, "exception");
-    } catch {}
+    try { await debugSnapshot(page, url, "exception"); } catch {}
     return { url, price: null, imageUrl: null };
   }
 }
 
-// Scrape više URL-ova
+// scrape više URL-ova
 async function scrapeMultiple(urls) {
+  const chromePath = resolveChromePath();
+  console.log("Using Chrome at:", chromePath);
+
   const browser = await puppeteer.launch({
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    executablePath: chromePath,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--no-zygote",
+      "--single-process",
+    ],
   });
 
   const page = await browser.newPage();
 
-  await page.setExtraHTTPHeaders({
-    "Accept-Language": "hr-HR,hr;q=0.9,en;q=0.8",
-  });
-
+  await page.setExtraHTTPHeaders({ "Accept-Language": "hr-HR,hr;q=0.9,en;q=0.8" });
   await page.setUserAgent(
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0 Safari/537.36"
   );
   await page.setViewport({ width: 1366, height: 768 });
 
   const results = [];
-
   for (const url of urls) {
     const data = await scrapeSinglePage(page, url);
     results.push(data);
