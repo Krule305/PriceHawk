@@ -1,8 +1,10 @@
-![License](https://img.shields.io/github/license/Krule305/PriceHawk)
-![Last Commit](https://img.shields.io/github/last-commit/Krule305/PriceHawk)
-![Repo Size](https://img.shields.io/github/repo-size/Krule305/PriceHawk)
-![Issues](https://img.shields.io/github/issues/Krule305/PriceHawk)
-![Pull Requests](https://img.shields.io/github/issues-pr/Krule305/PriceHawk)
+![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+![Node.js](https://img.shields.io/badge/Node.js-43853D?style=for-the-badge&logo=node.js&logoColor=white)
+![Express.js](https://img.shields.io/badge/Express.js-404D59?style=for-the-badge)
+![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
+![Puppeteer](https://img.shields.io/badge/Puppeteer-40B5A4?style=for-the-badge&logo=puppeteer&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+
 
 **PriceTracker Web App**
 
