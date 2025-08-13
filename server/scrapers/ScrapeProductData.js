@@ -112,7 +112,7 @@ async function tryAcceptCookies(page) {
       const btn = await page.$(sel);
       if (btn) {
         await btn.click().catch(() => {});
-        await delay(400);
+        await page.waitForTimeout(400);;
         return;
       }
     } catch {}
@@ -123,7 +123,7 @@ async function tryAcceptCookies(page) {
       const txt = (await page.evaluate((e) => e.textContent || "", el)).toLowerCase();
       if (/(prihvati|slažem|accept|i agree|allow all|allow)/i.test(txt)) {
         await el.click().catch(() => {});
-        await delay(400);
+        await page.waitForTimeout(400);
         return;
       }
     }
@@ -164,7 +164,7 @@ async function scrapeSinglePage(page, url) {
   try {
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30000 });
     await tryAcceptCookies(page);
-    await delay(800);
+    await page.waitForTimeout(800);
     await gentleScroll(page);
 
     const hostname = new URL(url).hostname;
