@@ -1,5 +1,6 @@
 const puppeteer = require("puppeteer-extra");
 const StealthPlugin = require("puppeteer-extra-plugin-stealth");
+const { executablePath } = require("puppeteer");
 const fs = require("fs");
 const path = require("path");
 
