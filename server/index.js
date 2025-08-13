@@ -9,3 +9,9 @@ app.use(require('./routes/scrape'));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`API listening on http://localhost:${PORT}`));
+
+app.get("/chrome-path", (req, res) => {
+  const p = process.env.PUPPETEER_EXECUTABLE_PATH || "";
+  const exists = p ? fs.existsSync(p) : false;
+  res.json({ envPath: p || null, existsEnvPath: exists });
+});

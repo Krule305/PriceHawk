@@ -6,22 +6,55 @@ const path = require("path");
 
 puppeteer.use(StealthPlugin());
 
-const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-// pronalazak Chrome binarke (Render cache → env → puppeteer executablePath)
+// // nađi Chrome binarku na Renderu ili lokalno
 function resolveChromePath() {
-  if (process.env.PUPPETEER_EXECUTABLE_PATH) return process.env.PUPPETEER_EXECUTABLE_PATH;
-  const base = "/opt/render/.cache/puppeteer/chrome";
-  try {
-    const platforms = fs.readdirSync(base);
-    for (const p of platforms) {
-      const p1 = path.join(base, p, "chrome-linux64", "chrome");
-      if (fs.existsSync(p1)) return p1;
-      const p2 = path.join(base, p, "chrome");
-      if (fs.existsSync(p2)) return p2;
+  const envPath = process.env.PUPPETEER_EXECUTABLE_PATH;
+  if (envPath && fs.existsSync(envPath)) return envPath;
+
+  const roots = [
+    "/opt/render/.cache/puppeteer",                 
+    "/opt/render/project/.cache/puppeteer",         
+    path.join(process.cwd(), ".cache", "puppeteer") 
+  ];
+
+  const variants = [
+    "chrome-linux64/chrome",
+    "chrome-linux/chrome",
+    "chrome"
+  ];
+
+  for (const root of roots) {
+    const chromeDir = path.join(root, "chrome");
+    if (!fs.existsSync(chromeDir)) continue;
+    for (const ver of fs.readdirSync(chromeDir)) {
+      for (const v of variants) {
+        const p = path.join(chromeDir, ver, v);
+        if (fs.existsSync(p)) return p;
+      }
     }
-  } catch (_) {}
-  return executablePath();
+  }
+
+  try { return executablePath(); } catch { return null; }
+}
+
+async function launchBrowser() {
+  const chromePath = resolveChromePath();
+  if (!chromePath) throw new Error("Nisam uspio pronaći Chrome binarku (resolveChromePath).");
+
+  console.log("Using Chrome at:", chromePath);
+
+  return puppeteer.launch({
+    headless: true,
+    executablePath: chromePath,
+    args: [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--no-zygote",
+      "--single-process",
+    ],
+  });
 }
 
 function parsePrice(priceString) {
