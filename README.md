@@ -1,8 +1,8 @@
-![License](https://img.shields.io/github/license/USERNAME/REPO)
-![Last Commit](https://img.shields.io/github/last-commit/USERNAME/REPO)
-![Repo Size](https://img.shields.io/github/repo-size/USERNAME/REPO)
-![Issues](https://img.shields.io/github/issues/USERNAME/REPO)
-![Pull Requests](https://img.shields.io/github/issues-pr/USERNAME/REPO)
+![License](https://img.shields.io/github/license/Krule305/PriceHawk)
+![Last Commit](https://img.shields.io/github/last-commit/Krule305/PriceHawk)
+![Repo Size](https://img.shields.io/github/repo-size/Krule305/PriceHawk)
+![Issues](https://img.shields.io/github/issues/Krule305/PriceHawk)
+![Pull Requests](https://img.shields.io/github/issues-pr/Krule305/PriceHawk)
 
 **PriceTracker Web App**
 
