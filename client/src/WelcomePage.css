@@ -1,50 +1,55 @@
+/* Glavni container */
 .welcome-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background-color: #f7f9fc;
-  }
-  
-  .welcome-box {
-    background-color: white;
-    padding: 3rem 4rem;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    max-width: 500px;
-  }
-  
-  .welcome-box h1 {
-    margin-bottom: 1rem;
-    font-size: 2rem;
-    color: #333;
-  }
-  
-  .welcome-box p {
-    font-size: 1rem;
-    color: #555;
-    margin-bottom: 2rem;
-  }
-  
-  .button-group {
-    display: flex;
-    justify-content: center;
-    gap: 1rem;
-  }
-  
-  .button-group button {
-    padding: 0.7rem 1.5rem;
-    font-size: 1rem;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    background-color: #1976d2;
-    color: white;
-    transition: background-color 0.2s;
-  }
-  
-  .button-group button:hover {
-    background-color: #135ca8;
-  }
-  
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: var(--bg);
+  color: var(--text);
+}
+
+/* Dobrodošlica */
+.welcome-box {
+  background-color: var(--card);
+  color: var(--text);
+  padding: 3rem 4rem;
+  border-radius: 10px;
+  box-shadow: var(--shadow-2);
+  text-align: center;
+  max-width: 500px;
+}
+
+/* Tekstualni elementi */
+.welcome-box h1 {
+  margin-bottom: 1rem;
+  font-size: 2rem;
+  color: var(--text);
+}
+
+.welcome-box p {
+  font-size: 1rem;
+  color: var(--muted);
+  margin-bottom: 2rem;
+}
+
+/* Gumbi */
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.button-group button {
+  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background-color: var(--primary);
+  color: white;
+  transition: background-color 0.2s;
+}
+
+.button-group button:hover {
+  background-color: var(--primary-hover);
+}

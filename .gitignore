@@ -1,2 +1,9 @@
 node_modules
 server/serviceAccountKey.json
+.env
+.env.*
+build
+dist
+coverage
+*.log
+https__*

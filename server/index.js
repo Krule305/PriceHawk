@@ -1,16 +1,11 @@
-const express = require("express");
-const cors = require("cors");
-const scrapeRoutes = require("./routes/scrape");
-
+require('dotenv').config();
+const express = require('express');
+const cors = require('cors');
 const app = express();
-const PORT = 5000;
 
 app.use(cors());
 app.use(express.json());
+app.use(require('./routes/scrape'));
 
-// koristi scrape route
-app.use("/api", scrapeRoutes);
-
-app.listen(PORT, () => {
-  console.log(`Server radi na http://localhost:${PORT}`);
-});
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`API listening on http://localhost:${PORT}`));

@@ -1,15 +1,19 @@
 const scrapeAllProducts = require("./scrapeCron");
+const cron = require("node-cron");
 
 function logWithTimestamp(message) {
   const now = new Date().toLocaleString();
   console.log(`[${now}] ${message}`);
 }
 
-async function runScraperPeriodically() {
-  logWithTimestamp("🔄 Pokrećem scrapeCron...");
+// Pokreni odmah pri startu
+(async () => {
+  logWithTimestamp(" Prvo pokretanje scrapeCron...");
   await scrapeAllProducts();
-  setTimeout(runScraperPeriodically, 3 * 60 * 1000);
-}
+})();
 
-logWithTimestamp("✅ Cron servis pokrenut...");
-runScraperPeriodically();
+// Cron job – u 08:00 i 20:00
+cron.schedule("0 8,20 * * *", async () => {
+  logWithTimestamp("Pokrećem scrapeCron...");
+  await scrapeAllProducts();
+});

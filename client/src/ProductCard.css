@@ -1,151 +1,91 @@
+/* Glavni kontejner kartice proizvoda */
 .product-card {
-    width: 100%;
-    max-width: 350px;
-    min-height: 460px;
-    background-color: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    position: relative;
-    padding-bottom: 2.5rem; /* prostor za akcije */
-    transition: transform 0.2s ease;
-  }
-  
-  .product-card:hover {
-    transform: translateY(-4px);
-  }
-  
-  .image-container {
-    height: 180px;
-    padding: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: white;
-    border-bottom: 1px solid #e0e0e0;
-    border-top-left-radius: 12px;
-    border-top-right-radius: 12px;
-  }
-  
-  .product-image {
-    max-height: 100%;
-    max-width: 100%;
-    object-fit: contain;
-    transition: transform 0.2s ease;
-  }
-  
-  .product-card:hover .product-image {
-    transform: scale(1.05);
-  }
-  
-  .product-card-actions {
-    position: absolute;
-    bottom: 0.6rem;
-    right: 0.6rem;
-    display: flex;
-    gap: 0.4rem;
+  width: 100%;
+  max-width: 350px;
+  min-height: 480px;
+  background-color: var(--card);
+  color: var(--text);
+  border-radius: 12px;
+  box-shadow: var(--shadow-1);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  padding-bottom: 2.5rem;
+  transition: transform 0.2s ease;
+  margin: 0 auto; /* centriraj kad je manja od 100% */
+}
 
-  }
-  
-  .product-info {
-    padding: 1rem;
-    font-size: 0.95rem;
-    line-height: 1.4;
-  }
-  
-  .product-name {
-    font-size: 1.3rem;
-    font-weight: bold;
-    color: #212121;
-    margin-bottom: 0.3rem;
-  }
-  
-  .product-date {
-    font-size: 0.85rem;
-    color: #666;
-    margin-bottom: 1.5rem;
-  }
-  
-  .dual-price-box {
-    display: flex;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 1.5rem;
-  }
-  
-  .price-block {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-  }
-  
-  .price-label {
-    font-size: 0.8rem;
-    color: #555;
-  }
-  
-  .price-value {
-    font-weight: bold;
-    font-size: 1.05rem;
-  }
-  
-  .price-value.current {
-    color: #000;
-  }
-  
-  .price-value.desired {
-    color: #d32f2f;
-  }
-  
-  .vertical-divider {
-    width: 1px;
-    background-color: #000;
-    align-self: stretch;
-  }
-  
-  .product-stores p {
-    margin: 0 0 0.2rem 0;
-    font-weight: 500;
-  }
-  
-  .store-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    font-size: 0.85rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-  }
-  
-  .store-list li a {
-    color: #1976d2;
-    text-decoration: none;
-    word-break: break-word;
-  }
-  
-  .icon-btn {
-    background-color: #e3f2fd;
-    border: none;
-    padding: 6px;
-    border-radius: 6px;
-    cursor: pointer;
-    color: #1976d2;
-    transition: background-color 0.2s;
-  }
-  
-  .icon-btn:hover {
-    background-color: #bbdefb;
-  }
-  
-  .icon-btn.danger {
-    background-color: #ffebee;
-    color: #d32f2f;
-  }
-  
-  .icon-btn.danger:hover {
-    background-color: #ffcdd2;
-  }
-  
+/* Efekt lebdenja kartice */
+.product-card:hover { transform: translateY(-4px); }
+
+/* Kontejner za sliku */
+.image-container {
+  height: 200px;
+  padding: 20px;
+  display: flex; align-items: center; justify-content: center;
+  background-color: var(--card);
+  border-bottom: 1px solid var(--border);
+  border-top-left-radius: 12px; border-top-right-radius: 12px;
+}
+
+/* Slika proizvoda */
+.product-image {
+  max-height: 100%; max-width: 100%; object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+/* Efekt zumiranja slike */
+.product-card:hover .product-image { transform: scale(1.05); }
+
+/* Gumbi za uređivanje/brisanje */
+.product-card-actions {
+  position: absolute; bottom: 0.6rem; right: 0.6rem;
+  display: flex; gap: 0.4rem;
+}
+
+/* Sekcija s informacijama o proizvodu */
+.product-info { padding: 1rem; font-size: 0.95rem; line-height: 1.4; }
+.product-name { font-size: 1.3rem; font-weight: bold; color: var(--text); margin-bottom: 0.3rem; }
+.product-date { font-size: 0.85rem; color: var(--muted); margin-bottom: 1.5rem; }
+
+/* Okvir s trenutnom i željenom cijenom */
+.dual-price-box { display: flex; justify-content: space-between; gap: 12px; margin-bottom: 1.5rem; }
+.price-block { display: flex; flex-direction: column; flex: 1; }
+.price-label { font-size: 0.8rem; color: var(--muted); }
+.price-value { font-weight: bold; font-size: 1.05rem; }
+.price-value.current { color: var(--text); }
+.price-value.desired { color: var(--danger); }
+
+/* Okomita linija između cijena */
+.vertical-divider { width: 1px; background-color: var(--text); opacity: .2; align-self: stretch; }
+
+/* Naslov sekcije trgovina */
+.product-stores p { margin: 0 0 0.2rem 0; font-weight: 500; color: var(--text); }
+
+/* Lista trgovina */
+.store-list { list-style: none; padding: 0; margin: 0; font-size: 0.85rem; display: flex; flex-direction: column; gap: 0.2rem; }
+.store-list li a { color: var(--primary); text-decoration: none; word-break: break-word; }
+.store-list li a:hover { text-decoration: underline; }
+
+/* Osnovni stil gumba s ikonom */
+.icon-btn {
+  background-color: rgba(33, 150, 243, 0.12);
+  border: none;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  color: var(--primary);
+  transition: background-color 0.2s;
+}
+.icon-btn:hover { background-color: rgba(33,150,243,0.22); }
+
+/* Gumb opasne radnje (brisanje) */
+.icon-btn.danger { background-color: rgba(229,57,53,0.12); color: var(--danger); }
+.icon-btn.danger:hover { background-color: rgba(229,57,53,0.22); }
+
+/* Dark mode boje gumba */
+:root[data-theme="dark"] .icon-btn { background-color: rgba(96,165,250,0.15); }
+:root[data-theme="dark"] .icon-btn:hover { background-color: rgba(96,165,250,0.27); }
+:root[data-theme="dark"] .icon-btn.danger { background-color: rgba(248,113,113,0.15); }
+:root[data-theme="dark"] .icon-btn.danger:hover { background-color: rgba(248,113,113,0.27); }

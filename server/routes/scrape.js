@@ -1,30 +1,26 @@
-const express = require("express");
-const router = express.Router();
-const scrapeProductData = require("../scrapers/ScrapeProductData");
+const router = require('express').Router();
+const scrapeMultiple = require('../scrapers/ScrapeProductData');
 
-router.post("/scrape-product", async (req, res) => {
-  const { urls } = req.body;
-
-  if (!urls || !Array.isArray(urls)) {
-    return res.status(400).json({ error: "Lista URL-ova je obavezna." });
-  }
-
+// POST ruta za pokretanje scrapinga
+router.post('/api/scrape', async (req, res) => {
   try {
-    const allResults = await scrapeProductData(urls);
+    // Dohvaćanje URL-ova
+    const { urls } = req.body || {};
+    if (!Array.isArray(urls) || urls.length === 0) {
+      return res.status(400).json({ error: 'No urls' });
+    }
 
-    const validPrices = allResults.map(r => r.price).filter(p => typeof p === "number");
-    const minPrice = validPrices.length ? Math.min(...validPrices) : null;
+    console.log(' /api/scrape ->', urls);
 
-    const imageUrl = allResults.find(r => r.imageUrl)?.imageUrl || null;
+    // Pokretanje funkcije za scraping više URL-ova
+    // Očekuje povratak niza objekata: [{ url, price, imageUrl }]
+    const results = await scrapeMultiple(urls);
 
-    res.json({
-      imageUrl,
-      price: minPrice,
-      allResults,
-    });
-  } catch (err) {
-    console.error("Greška u backend route:", err.message);
-    res.status(500).json({ error: "Greška kod scrapanja" });
+    // Slanje rezultata nazad klijentu
+    res.json(results);
+  } catch (e) {
+    console.error('/api/scrape error:', e);
+    res.status(500).json({ error: 'Scrape failed' });
   }
 });
 

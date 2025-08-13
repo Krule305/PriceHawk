@@ -15,7 +15,9 @@ import AddProduct from "./AddProduct";
 import ProductCard from "./ProductCard";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import { toast } from "react-toastify";
-import "./Dashboard.css"; // make sure CSS is imported
+import { FiBell, FiLogOut, FiMoon, FiSun } from "react-icons/fi";
+import Modal from "react-modal";
+import "./Dashboard.css";
 
 export default function Dashboard() {
   const [username, setUsername] = useState("");
@@ -26,24 +28,27 @@ export default function Dashboard() {
   const [productToDelete, setProductToDelete] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("Sve");
   const [searchTerm, setSearchTerm] = useState("");
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [dismissedAlertIds, setDismissedAlertIds] = useState([]);
+  const [theme, setTheme] = useState(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved === "light" || saved === "dark") return saved;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
+
   const navigate = useNavigate();
 
+  // Autentikacija + dohvat podataka
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const docRef = doc(db, "users", user.uid);
         const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          setUsername(docSnap.data().username);
-        }
+        if (docSnap.exists()) setUsername(docSnap.data().username);
 
         const productsRef = collection(db, "users", user.uid, "products");
         const unsubscribeProducts = onSnapshot(productsRef, (snapshot) => {
-          const productsList = snapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          setProducts(productsList);
+          setProducts(snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
           setLoading(false);
         });
 
@@ -56,11 +61,21 @@ export default function Dashboard() {
     return () => unsubscribe();
   }, [navigate]);
 
+  // Promjena teme
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
+
+  // Odjava
   const handleLogout = async () => {
     await signOut(auth);
     navigate("/login");
   };
 
+  // Dodavanje/uređivanje proizvoda
   const handleSaveProduct = async (product) => {
     const user = auth.currentUser;
     if (!user) return;
@@ -74,10 +89,7 @@ export default function Dashboard() {
         await updateDoc(docRef, updatedFields);
         toast.success("Proizvod je ažuriran!");
       } else {
-        await addDoc(userProductsRef, {
-          ...product,
-          createdAt: new Date(),
-        });
+        await addDoc(userProductsRef, { ...product, createdAt: new Date() });
         toast.success("Proizvod je uspješno dodan!");
       }
 
@@ -89,6 +101,7 @@ export default function Dashboard() {
     }
   };
 
+  // Brisanje proizvoda
   const handleDeleteProduct = async (productId) => {
     const user = auth.currentUser;
     if (!user) return;
@@ -103,6 +116,7 @@ export default function Dashboard() {
     }
   };
 
+  // Brojač po kategorijama
   const getCategoryCounts = () => {
     const counts = {};
     products.forEach((p) => {
@@ -116,15 +130,123 @@ export default function Dashboard() {
   const categoryCounts = getCategoryCounts();
   const allCategories = ["Sve", ...new Set(products.map((p) => p.category || "Neodređeno"))];
 
+  // Izračun obavijesti
+  const alerts = products.filter(
+    (p) =>
+      typeof p.scrapedPrice === "number" &&
+      typeof p.targetPrice === "number" &&
+      p.scrapedPrice < p.targetPrice
+  );
+
+  const alertsToShow = alerts.filter((p) => !dismissedAlertIds.includes(p.id));
+  const unreadCount = alertsToShow.length;
+
   if (loading) return <p>Učitavanje...</p>;
 
   return (
     <div className="dashboard-container">
       <div className="dashboard-header">
-        <h2 className="dashboard-welcome">Dobrodošao/la, {username}!</h2>
-        <button onClick={handleLogout} className="dashboard-logout">Odjava</button>
+        <h2 className="dashboard-welcome">Pozdrav {username}!</h2>
+        <div className="dashboard-actions">
+          <button
+            className="notification-btn"
+            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+            title="Obavijesti"
+            aria-label="Obavijesti"
+          >
+            <FiBell size={18} />
+            {unreadCount > 0 && (
+              <span className="notif-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>
+            )}
+          </button>
+
+          <button
+            className="notification-btn"
+            onClick={toggleTheme}
+            title={theme === "dark" ? "Prebaci na svijetlu" : "Prebaci na tamnu"}
+            aria-label="Promijeni temu"
+            style={{ width: 36, height: 36 }}
+          >
+            {theme === "dark" ? <FiSun size={16} /> : <FiMoon size={16} />}
+          </button>
+
+          <button className="logout-btn" onClick={handleLogout} title="Odjava" aria-label="Odjava">
+            <FiLogOut size={18} />
+          </button>
+        </div>
       </div>
 
+      {/* Modal obavijesti */}
+      <Modal
+        isOpen={isNotificationsOpen}
+        onRequestClose={() => setIsNotificationsOpen(false)}
+        contentLabel="Obavijesti"
+        className="modal-content"
+        overlayClassName="modal-overlay"
+      >
+        <div className="modal-body">
+          <div className="notif-panel-header">
+            <h4>Obavijesti</h4>
+            <button className="notif-close" onClick={() => setIsNotificationsOpen(false)}>✕</button>
+          </div>
+
+          {alertsToShow.length === 0 ? (
+            <p className="notif-empty">Nema novih obavijesti.</p>
+          ) : (
+            alertsToShow.map((p) => {
+              const shopUrl = p.bestUrl || (Array.isArray(p.urls) ? p.urls[0] : "");
+              return (
+                <div key={p.id} className="notification-card">
+                  <div className="notif-main-content">
+                    <div className="notif-card-top">
+                      <div className="notif-name">{p.name || "Proizvod"}</div>
+                    </div>
+
+                    <div className="notif-prices-row">
+                      <div className="price-block">
+                        <span className="price-label">Trenutna cijena</span>
+                        <span className="price-value current">€ {p.scrapedPrice.toFixed(2)}</span>
+                      </div>
+                      <div className="price-divider" />
+                      <div className="price-block">
+                        <span className="price-label">Željena cijena</span>
+                        <span className="price-value target">€ {p.targetPrice.toFixed(2)}</span>
+                      </div>
+                    </div>
+
+                    {shopUrl && (
+                      <div className="notif-shop">
+                        Trgovina:{" "}
+                        <a href={shopUrl} target="_blank" rel="noreferrer">
+                          {(() => {
+                            try {
+                              return new URL(shopUrl).hostname.replace(/^www\./, "");
+                            } catch {
+                              return shopUrl;
+                            }
+                          })()}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="notif-delete-section">
+                    <button
+                      className="notif-delete-btn"
+                      title="Ukloni ovu obavijest"
+                      onClick={() => setDismissedAlertIds((prev) => [...new Set([...prev, p.id])])}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </Modal>
+
+      {/* Gornji dio dashboarda*/}
       <div className="dashboard-top">
         <div className="left-controls">
           <button
@@ -139,16 +261,29 @@ export default function Dashboard() {
         </div>
 
         <div className="right-controls">
-          <input
-            type="text"
-            placeholder="Pretraži po nazivu..."
-            className="search-input"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+          <div className="search-wrapper">
+            <input
+              type="text"
+              placeholder="Pretraži po nazivu..."
+              className="search-input"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            {searchTerm && (
+              <button
+                type="button"
+                className="clear-search"
+                onClick={() => setSearchTerm("")}
+                aria-label="Obriši pretragu"
+              >
+                ✕
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
+      {/* Kategorije */}
       <div className="category-buttons">
         {allCategories.map((cat) => (
           <button
@@ -161,11 +296,13 @@ export default function Dashboard() {
         ))}
       </div>
 
+      {/* Grid proizvoda */}
       <div className="product-grid">
         {products
-          .filter((p) =>
-            (selectedCategory === "Sve" || p.category === selectedCategory) &&
-            (p.name?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+          .filter(
+            (p) =>
+              (selectedCategory === "Sve" || p.category === selectedCategory) &&
+              (p.name?.toLowerCase() || "").includes(searchTerm.toLowerCase())
           )
           .map((product) => (
             <ProductCard
@@ -177,9 +314,10 @@ export default function Dashboard() {
               }}
               onDelete={(id) => setProductToDelete(id)}
             />
-        ))}
+          ))}
       </div>
 
+      {/* Modal za dodavanje/uređivanje */}
       <AddProduct
         isOpen={isModalOpen}
         onClose={() => {
@@ -190,6 +328,7 @@ export default function Dashboard() {
         initialData={editingProduct}
       />
 
+      {/* Modal potvrde brisanja */}
       <DeleteConfirmModal
         isOpen={!!productToDelete}
         onCancel={() => setProductToDelete(null)}

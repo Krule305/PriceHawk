@@ -1,0 +1,9 @@
+{
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "googleapis": "^155.0.1",
+    "open": "^10.2.0",
+    "react-icons": "^5.5.0"
+  }
+}

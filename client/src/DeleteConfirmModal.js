@@ -15,8 +15,11 @@ export default function DeleteConfirmModal({ isOpen, onCancel, onConfirm }) {
       overlayClassName="confirm-modal-overlay"
       contentLabel="Potvrdi brisanje"
     >
+      {/* Naslov i opis upozorenja */}
       <h2>Obrisati proizvod?</h2>
       <p>Jesi li siguran/na da želiš obrisati ovaj proizvod? Ova radnja se ne može poništiti.</p>
+
+      {/* Gumbi za odustajanje ili potvrdu */}
       <div className="confirm-modal-actions">
         <button className="cancel-btn" onClick={onCancel}>Odustani</button>
         <button className="delete-btn" onClick={onConfirm}>Obriši</button>

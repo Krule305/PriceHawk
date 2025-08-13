@@ -1,4 +1,3 @@
-// src/PrivateRoute.js
 import { Navigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
