@@ -6,7 +6,8 @@
   "license": "ISC",
   "scripts": {
     "start": "node index.js",
-    "postinstall": "npx puppeteer browsers install chrome"
+    "postinstall": "npx puppeteer browsers install chrome",
+    "start:cron": "node cronRunner.js"
   },
   "engines": {
     "node": "18.x"
