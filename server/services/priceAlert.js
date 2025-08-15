@@ -65,7 +65,7 @@ async function maybeNotifyDrop({ userId, productId, product, userEmail }) {
 
   const html = `
     <div style="font-family:Arial,sans-serif">
-      <h2>🔔 Cijena je pala ispod tvoje željene</h2>
+      <h3>Cijena je pala ispod tvoje željene za proizvod:</h3>
       <p><strong>${name}</strong></p>
       <p>Trenutna najniža cijena: <strong>${scrapedPrice.toFixed(2)} €</strong><br/>
          Tvoja željena cijena: <strong>${targetPrice.toFixed(2)} €</strong></p>
