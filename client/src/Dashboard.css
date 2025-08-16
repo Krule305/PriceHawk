@@ -1,530 +1,321 @@
+:root{
+  --bg:#f7f8fb;
+  --card:#ffffff;
+  --card-alt:#fafbff;
+  --text:#0f172a;
+  --muted:#6b7280;
+  --primary:#2563eb;
+  --primary-hover:#1e40af;
+  --border: rgba(15,23,42,0.10);   /* suptilan sivi rub */
+  --overlay: rgba(0,0,0,0.55);
+  --badge:#ef4444;
+  --badge-text:#fff;
+  --danger:#dc2626;
+  --shadow-1: 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-2: 0 10px 30px rgba(0,0,0,0.12);
+}
+:root[data-theme="dark"]{
+  --bg:#0b1220;
+  --card:#0f172a;
+  --card-alt:#0b1220;
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+  --primary:#60a5fa;
+  --primary-hover:#3b82f6;
+  --border: rgba(226,232,240,0.14);
+  --overlay: rgba(0,0,0,0.6);
+  --badge:#ef4444;
+  --badge-text:#fff;
+  --danger:#f97316;
+  --shadow-1: 0 1px 2px rgba(0,0,0,0.35);
+  --shadow-2: 0 12px 36px rgba(0,0,0,0.55);
+}
+
+
+/* desna traka */
+.notif-delete-section{
+  background-color: color-mix(in srgb, var(--card) 92%, #000 8%);
+  /* ako color-mix nije podržan, ostavi fallback ispod */
+  background-color: rgba(0,0,0,0.04);
+  border-left: 1px solid var(--border, rgba(0,0,0,0.10));
+}
+
+/* divider između cijena */
+.price-divider{
+  background: var(--text, #0f172a);
+  opacity: 0.20;
+}
+
+/* kartice/paneli koji imaju border bez definirane varijable */
+.notification-card,
+.modal-content{
+  /* ako negdje dodaš border, koristi fallback */
+  border: 1px solid var(--border, rgba(0,0,0,0.10));
+}
+
+
 /* Glavni kontejner dashboarda */
-.dashboard-container {
-  text-align: center;
-  padding: 2rem 1rem;
-  background: var(--bg);
-  color: var(--text);
+.dashboard-container{
+  text-align:center;
+  padding:2rem 1rem;
+  background:var(--bg);
+  color:var(--text);
 }
 
 /* Gornji header */
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 1rem;
-  margin-bottom: 2rem;
+.dashboard-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:0 1rem;
+  margin-bottom:2rem;
 }
 
 /* Tekst dobrodošlice */
-.dashboard-welcome {
-  margin: 0;
-  font-size: 1.2rem;
-  font-weight: 500;
-  color: var(--text);
-}
-
-/* Gumb za odjavu (stara verzija) */
-.dashboard-logout {
-  background: none;
-  border: none;
-  color: var(--muted);
-  font-size: 14px;
-  padding: 6px 10px;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: background 0.2s, color 0.2s;
-}
-.dashboard-logout:hover {
-  background: rgba(0,0,0,0.05);
-  color: var(--text);
-}
-:root[data-theme="dark"] .dashboard-logout:hover {
-  background: rgba(255,255,255,0.06);
+.dashboard-welcome{
+  margin:0;
+  font-size:1.2rem;
+  font-weight:500;
+  color:var(--text);
 }
 
 /* Gornja kontrolna traka */
-.dashboard-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding: 0 1rem;
+.dashboard-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:1rem;
+  margin-bottom:1rem;
+  padding:0 1rem;
 }
 
 /* Lijeva i desna strana kontrola */
 .left-controls,
-.right-controls {
-  display: flex;
-  align-items: center;
+.right-controls{
+  display:flex;
+  align-items:center;
 }
 
-/* Gumb za dodavanje proizvoda */
-.add-product-btn {
-  background-color: var(--primary);
-  color: #fff;
-  border: none;
-  padding: 0.6rem 1.2rem;
-  border-radius: 10px;
-  font-weight: 500;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: background-color 0.2s, transform 0.1s;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  box-shadow: var(--shadow-1);
+/* Gumb: Dodaj proizvod */
+.add-product-btn{
+  background-color:var(--primary);
+  color:#fff;
+  border:none;
+  padding:.6rem 1.2rem;
+  border-radius:10px;
+  font-weight:500;
+  font-size:.95rem;
+  cursor:pointer;
+  transition:background-color .2s, transform .1s;
+  display:inline-flex;
+  align-items:center;
+  gap:.5rem;
+  box-shadow:var(--shadow-1);
 }
-.add-product-btn:hover {
-  background-color: var(--primary-hover);
-  transform: translateY(-1px);
-}
-
-/* Omot i polje za pretragu */
-.search-wrapper {
-  position: relative;
-  display: inline-block;
-}
-.search-input {
-  padding: 0.5rem 1rem;
-  font-size: 0.95rem;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  width: 250px;
-  max-width: 100%;
-  background-color: var(--card);
-  color: var(--text);
-  transition: border-color 0.2s;
-  padding-right: 2rem;
-}
-.search-input:focus {
-  outline: none;
-  border-color: var(--primary);
-}
-.clear-search {
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  background: transparent;
-  border: none;
-  font-size: 1rem;
-  cursor: pointer;
-  color: var(--muted);
-}
-.clear-search:hover {
-  color: var(--text);
+.add-product-btn:hover{
+  background-color:var(--primary-hover);
+  transform:translateY(-1px);
 }
 
-/* Kategorije proizvoda */
-.category-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.6rem;
-  margin: 1rem 0 2rem;
+/* Pretraga */
+.search-wrapper{ position:relative; display:inline-block; }
+.search-input{
+  padding:.5rem 1rem;
+  font-size:.95rem;
+  border:1px solid var(--border);
+  border-radius:10px;
+  width:250px; max-width:100%;
+  background-color:var(--card);
+  color:var(--text);
+  transition:border-color .2s;
+  padding-right:2rem;
 }
-.category-button {
-  padding: 0.4rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background-color: var(--card);
-  color: var(--text);
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-weight: 500;
+.search-input:focus{ outline:none; border-color:var(--primary); }
+.clear-search{
+  position:absolute; right:.5rem; top:50%; transform:translateY(-50%);
+  background:transparent; border:none; font-size:1rem; cursor:pointer; color:var(--muted);
 }
-.category-button:hover {
-  background-color: rgba(0,0,0,0.04);
+.clear-search:hover{ color:var(--text); }
+
+/* Kategorije */
+.category-buttons{
+  display:flex; flex-wrap:wrap; justify-content:center;
+  gap:.6rem; margin:1rem 0 2rem;
 }
-:root[data-theme="dark"] .category-button:hover {
-  background-color: rgba(255,255,255,0.06);
+.category-button{
+  padding:.4rem 1rem; border:1px solid var(--border); border-radius:10px;
+  background-color:var(--card); color:var(--text); font-size:.9rem; cursor:pointer;
+  transition:all .2s; font-weight:500;
 }
-.category-button.active {
-  background-color: var(--primary);
-  color: white;
-  border-color: var(--primary);
-}
+.category-button:hover{ background-color:rgba(0,0,0,.04); }
+:root[data-theme="dark"] .category-button:hover{ background-color:rgba(255,255,255,.06); }
+.category-button.active{ background-color:var(--primary); color:#fff; border-color:var(--primary); }
 
 /* Grid proizvoda */
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 32px 25px;
-  padding: 3rem;
+.product-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
+  gap:32px 25px; padding:3rem;
 }
-@media (max-width: 768px) {
-  .product-grid {
-    padding: 2rem 1.5rem;
-    gap: 24px 20px;
-  }
+@media (max-width:768px){
+  .product-grid{ padding:2rem 1.5rem; gap:24px 20px; }
 }
-@media (max-width: 480px) {
-  .product-grid {
-    padding: 1.5rem 1rem;
-    gap: 20px 15px;
-  }
+@media (max-width:480px){
+  .product-grid{ padding:1.5rem 1rem; gap:20px 15px; }
 }
 
 /* Gumbi u headeru (zvono, tema, odjava) */
-.dashboard-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.notification-btn {
-  position: relative;
-}
+.dashboard-actions{ display:flex; align-items:center; gap:10px; }
+.notification-btn{ position:relative; }
 .notification-btn,
-.logout-btn {
-  background-color: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 6px 8px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  color: var(--text);
+.logout-btn{
+  background-color:var(--card);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:6px 8px;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all .2s ease; color:var(--text);
 }
 .notification-btn:hover,
-.logout-btn:hover {
-  background-color: rgba(0,0,0,0.04);
-  border-color: #999;
+.logout-btn:hover{
+  background-color:rgba(0,0,0,.04);
+  border-color:#999;
 }
 :root[data-theme="dark"] .notification-btn:hover,
-:root[data-theme="dark"] .logout-btn:hover {
-  background-color: rgba(255,255,255,0.06);
-  border-color: var(--border);
+:root[data-theme="dark"] .logout-btn:hover{
+  background-color:rgba(255,255,255,.06);
+  border-color:var(--border);
 }
 
-/* Bedž obavijesti */
-.notif-badge {
-  position: absolute;
-  top: -6px;
-  right: -6px;
-  background: var(--badge);
-  color: var(--badge-text);
-  font-size: 0.7rem;
-  line-height: 1;
-  padding: 3px 6px;
-  border-radius: 999px;
-  border: 2px solid var(--card);
+/* Badge obavijesti */
+.notif-badge{
+  position:absolute; top:-6px; right:-6px;
+  background:var(--badge); color:var(--badge-text);
+  font-size:.7rem; line-height:1; padding:3px 6px;
+  border-radius:999px; border:2px solid var(--card);
 }
 
-/* Panel s obavijestima */
-.notif-panel,
-.notifications-panel {
-  position: absolute;
-  top: 70px;
-  right: 20px;
-  background: var(--card);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 12px;
-  width: 500px;
-  max-height: 60vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow-2);
-  z-index: 1000;
-  color: var(--text);
+/* Modal */
+.modal-overlay{
+  position:fixed; inset:0; background:var(--overlay);
+  display:flex; align-items:center; justify-content:center; z-index:999;
+}
+.modal-content{
+  background-color:var(--card); color:var(--text);
+  border-radius:12px; width:100%; max-width:500px; max-height:90vh;
+  overflow-y:auto; box-shadow:var(--shadow-2); font-family:'Roboto',sans-serif;
+  position:relative;
+}
+.modal-body{ padding:2rem; }
+@media (max-width:480px){
+  .modal-content{ width:90%; max-width:none; }
+  .modal-body{ padding:1.5rem; }
 }
 
-/* Header unutar panela */
-.notif-panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin: -6px -6px 10px -6px;
-  padding: 6px;
-  border-bottom: 1px solid var(--border);
+/* Header unutar modala */
+.notif-panel-header{
+  display:flex; align-items:center; justify-content:space-between;
+  margin:-6px -6px 10px -6px; padding:6px; border-bottom:1px solid var(--border);
 }
-.notif-panel-header h4 {
-  margin: 0;
-  font-size: 16px;
-  color: var(--text);
-}
-.notif-close {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  font-size: 16px;
-  color: var(--muted);
-}
+.notif-panel-header h4{ margin:0; font-size:16px; color:var(--text); }
+.notif-close{ background:transparent; border:none; cursor:pointer; font-size:16px; color:var(--muted); }
 
-/* Kartica obavijesti */
-.notification-card {
-  display: flex;
-  background: var(--card);
-  color: var(--text);
-  border-radius: 8px;
-  overflow: hidden;
-  margin-bottom: 10px;
-  box-shadow: var(--shadow-1);
+/* Kartica obavijesti: sadržaj + desna traka za brisanje */
+.notification-card{
+  display:grid;
+  grid-template-columns:1fr 44px;   /* lijevo sadržaj | desno delete traka */
+  align-items:stretch;
+  background:var(--card); color:var(--text);
+  border-radius:8px; overflow:hidden;
+  margin-bottom:10px; box-shadow:var(--shadow-1);
 }
-.notification-card:hover {
-  box-shadow: 0 2px 8px rgba(0,0,0,.08);
-  transform: translateY(-1px);
+.notification-card:hover{ box-shadow:0 2px 8px rgba(0,0,0,.08); transform:translateY(-1px); }
+
+/* lijevi dio */
+.notif-main-content{ padding:12px; }
+
+/* desna traka (X centriran i traka zalijepljena uz rub) */
+.notif-delete-section{
+  width:44px; background-color:rgba(0,0,0,.04);
+  display:flex; justify-content:center; align-items:center;
+  border-left:1px solid var(--border);
 }
+:root[data-theme="dark"] .notif-delete-section{ background-color:rgba(255,255,255,.06); }
+
+.notif-delete-btn{
+  background:transparent; border:none; font-size:18px; color:var(--muted);
+  cursor:pointer; transition:color .2s, background .2s;
+  line-height:1; width:32px; height:32px; border-radius:8px;
+  display:flex; align-items:center; justify-content:center;
+}
+.notif-delete-btn:hover{ color:var(--danger); background:rgba(0,0,0,.05); }
+:root[data-theme="dark"] .notif-delete-btn:hover{ background:rgba(255,255,255,.08); }
 
 /* Gornji dio kartice obavijesti */
-.notif-card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  gap: 10px;
+.notif-card-top{
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:10px; gap:10px;
 }
-.notif-name {
-  font-weight: 600;
-  color: var(--text);
-  line-height: 1.2;
-  word-break: break-word;
-}
-.notif-link {
-  background: none;
-  color: var(--primary);
-  padding: 0;
-  font-size: 0.9rem;
-  border-radius: 0;
-  white-space: nowrap;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-}
-.notif-link:hover {
-  text-decoration: underline;
-}
-.notif-link::after {
-  content: ">";
-  font-weight: bold;
-  margin-left: 2px;
+.notif-name{
+  font-weight:600; color:var(--text);
+  line-height:1.2; word-break:break-word;
 }
 
-/* Cijene u obavijesti */
-.notif-prices-row {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 6px;
+/* Cijene */
+.notif-prices-row{
+  display:grid; grid-template-columns:1fr auto 1fr;
+  align-items:center; gap:12px; margin-bottom:6px;
 }
-.price-block {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.price-label {
-  font-size: 0.8rem;
-  color: var(--muted);
-}
-.price-value {
-  font-weight: 700;
-  font-size: 1rem;
-}
-.price-value.current {
-  color: var(--text);
-}
-.price-value.target {
-  color: var(--danger);
-}
-.price-divider {
-  width: 1px;
-  height: 32px;
-  background: var(--text);
-  opacity: 0.2;
-  justify-self: center;
+.price-block{ display:flex; flex-direction:column; gap:2px; }
+.price-label{ font-size:.8rem; color:var(--muted); }
+.price-value{ font-weight:700; font-size:1rem; white-space:nowrap; }
+.price-value.current{ color:var(--text); }
+.price-value.target{ color:var(--danger); }
+.price-divider{
+  width:1px; height:32px; background:var(--text);
+  opacity:.2; justify-self:center;
 }
 
 /* Ostalo u obavijesti */
-.notif-shop {
-  font-size: 0.85rem;
-  color: var(--muted);
+.notif-shop{ font-size:.85rem; color:var(--muted); }
+.notif-empty{ margin:0; padding:1rem; color:var(--muted); text-align:center; }
+
+/* Responsive */
+@media (max-width:768px){
+  .modal-content{ max-height:70vh; }
+  .notification-card{ border-radius:10px; }
+  .notif-card-top{ gap:6px; }
+  .notif-name{ font-size:.95rem; }
+  .notif-prices-row{ grid-template-columns:1fr; gap:8px; }
+  .price-divider{ display:none; }
+  .notif-shop{ font-size:.8rem; }
+  .notif-delete-section{ width:44px; }
+  .notif-delete-btn{ font-size:17px; }
 }
-.notif-empty {
-  margin: 0;
-  padding: 1rem;
-  color: var(--muted);
-  text-align: center;
+@media (max-width:480px){
+  .notif-panel-header{ padding:8px 10px; }
+  .notif-panel-header h4{ font-size:15px; }
+  .notif-close{ font-size:15px; }
+  .notif-main-content{ padding:10px; }
+  .notif-name{ font-size:.92rem; }
+  .price-label{ font-size:.78rem; }
+  .price-value{ font-size:.95rem; }
+  .notification-card{ grid-template-columns:1fr 40px; }
+  .notif-delete-section{ width:40px; }
+  .notif-delete-btn{ font-size:16px; }
 }
 
-/* Gumb za brisanje obavijesti */
-.notif-delete-section {
-  width: 50px;
-  background-color: rgba(0,0,0,0.04);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-:root[data-theme="dark"] .notif-delete-section {
-  background-color: rgba(255,255,255,0.06);
-}
-.notif-delete-btn {
-  background: transparent;
-  border: none;
-  font-size: 18px;
-  color: var(--muted);
-  cursor: pointer;
-  transition: color 0.2s;
-}
-.notif-delete-btn:hover {
-  color: var(--danger);
-}
-
-/* Responsive stilovi */
-@media (max-width: 768px) {
-  .notifications-panel,
-  .notif-panel {
-    right: 12px;
-    left: 12px;
-    width: auto;
-    max-width: none;
-    top: 64px;
-    max-height: 70vh;
-    border-radius: 10px;
-  }
-  .notification-card {
-    margin-bottom: 12px;
-    border-radius: 10px;
-  }
-  .notif-card-top {
-    gap: 6px;
-  }
-  .notif-name {
-    font-size: 0.95rem;
-  }
-  .notif-link {
-    font-size: 0.85rem;
-  }
-  .notif-prices-row {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-  .price-divider {
-    display: none;
-  }
-  .notif-shop {
-    font-size: 0.8rem;
-  }
-  .notif-delete-section {
-    width: 44px;
-  }
-  .notif-delete-btn {
-    font-size: 17px;
-  }
-}
-@media (max-width: 480px) {
-  .notifications-panel,
-  .notif-panel {
-    right: 0;
-    left: 0;
-    width: 100%;
-    top: 56px;
-    border-radius: 8px;
-  }
-  .notif-panel-header {
-    padding: 8px 10px;
-  }
-  .notif-panel-header h4 {
-    font-size: 15px;
-  }
-  .notif-close {
-    font-size: 15px;
-  }
-  .notif-main-content {
-    padding: 10px;
-  }
-  .notif-name {
-    font-size: 0.92rem;
-  }
-  .price-label {
-    font-size: 0.78rem;
-  }
-  .price-value {
-    font-size: 0.95rem;
-  }
-  .notif-link {
-    font-size: 0.82rem;
-  }
-  .notif-delete-section {
-    width: 40px;
-  }
-  .notif-delete-btn {
-    font-size: 16px;
-  }
-}
-@media (hover: none) and (pointer: coarse) {
-  .notif-link,
-  .notif-dismiss,
+/* Dodiri / bez hovera */
+@media (hover:none) and (pointer:coarse){
   .notif-delete-btn,
   .notification-btn,
-  .logout-btn {
-    min-height: 38px;
-  }
+  .logout-btn{ min-height:38px; }
 }
 
-/* Boja linkova u obavijestima */
-.notifications-panel a,
-.notif-panel a,
-.notif-shop a,
-.notif-link {
-  color: #1976d2 !important;
+/* Link u obavijesti (shop) */
+.notif-shop a{
+  color:#1976d2; text-decoration:none;
 }
-.notifications-panel a:visited,
-.notif-panel a:visited,
-.notif-shop a:visited,
-.notif-link:visited {
-  color: #1976d2 !important;
-}
-.notifications-panel a:hover,
-.notif-panel a:hover,
-.notif-shop a:hover,
-.notif-link:hover,
-.notifications-panel a:active,
-.notif-panel a:active,
-.notif-shop a:active,
-.notif-link:active,
-.notifications-panel a:focus-visible,
-.notif-panel a:focus-visible,
-.notif-shop a:focus-visible,
-.notif-link:focus-visible {
-  color: #1976d2 !important;
-}
-
-/* Modal stilovi */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: var(--overlay);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-}
-.modal-content {
-  background-color: var(--card);
-  color: var(--text);
-  border-radius: 12px;
-  width: 100%;
-  max-width: 500px;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: var(--shadow-2);
-  font-family: 'Roboto', sans-serif;
-  position: relative;
-}
-.modal-body {
-  padding: 2rem;
-}
-@media (max-width: 480px) {
-  .modal-content {
-    width: 90%;
-    max-width: none;
-  }
-  .modal-body {
-    padding: 1.5rem;
-  }
-}
+.notif-shop a:hover{ text-decoration:underline; }

@@ -230,15 +230,16 @@ export default function Dashboard() {
                     )}
                   </div>
 
-                  <div className="notif-delete-section">
-                    <button
-                      className="notif-delete-btn"
-                      title="Ukloni ovu obavijest"
-                      onClick={() => setDismissedAlertIds((prev) => [...new Set([...prev, p.id])])}
-                    >
-                      ✕
-                    </button>
-                  </div>
+                  <button
+                    className="notif-remove"
+                    title="Ukloni ovu obavijest"
+                    aria-label="Ukloni obavijest"
+                    onClick={() =>
+                      setDismissedAlertIds((prev) => [...new Set([...prev, p.id])])
+                    }
+                  >
+                    ×
+                  </button>
                 </div>
               );
             })
