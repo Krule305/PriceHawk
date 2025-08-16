@@ -1,37 +1,3 @@
-:root{
-  --bg:#f7f8fb;
-  --card:#ffffff;
-  --card-alt:#fafbff;
-  --text:#0f172a;
-  --muted:#6b7280;
-  --primary:#2563eb;
-  --primary-hover:#1e40af;
-  --border: rgba(15,23,42,0.10);   /* suptilan sivi rub */
-  --overlay: rgba(0,0,0,0.55);
-  --badge:#ef4444;
-  --badge-text:#fff;
-  --danger:#dc2626;
-  --shadow-1: 0 1px 2px rgba(0,0,0,0.06);
-  --shadow-2: 0 10px 30px rgba(0,0,0,0.12);
-}
-:root[data-theme="dark"]{
-  --bg:#0b1220;
-  --card:#0f172a;
-  --card-alt:#0b1220;
-  --text:#e5e7eb;
-  --muted:#94a3b8;
-  --primary:#60a5fa;
-  --primary-hover:#3b82f6;
-  --border: rgba(226,232,240,0.14);
-  --overlay: rgba(0,0,0,0.6);
-  --badge:#ef4444;
-  --badge-text:#fff;
-  --danger:#f97316;
-  --shadow-1: 0 1px 2px rgba(0,0,0,0.35);
-  --shadow-2: 0 12px 36px rgba(0,0,0,0.55);
-}
-
-
 /* desna traka */
 .notif-delete-section{
   background-color: color-mix(in srgb, var(--card) 92%, #000 8%);
@@ -52,7 +18,6 @@
   /* ako negdje dodaš border, koristi fallback */
   border: 1px solid var(--border, rgba(0,0,0,0.10));
 }
-
 
 /* Glavni kontejner dashboarda */
 .dashboard-container{
@@ -231,10 +196,10 @@
   border-radius:8px; overflow:hidden;
   margin-bottom:10px; box-shadow:var(--shadow-1);
 }
-.notification-card:hover{ box-shadow:0 2px 8px rgba(0,0,0,.08); transform:translateY(-1px); }
+.notification-card:hover{ box-shadow:0 2px 8px rgba(0,0,0,.08);}
 
 /* lijevi dio */
-.notif-main-content{ padding:12px; }
+.notif-main-content{ padding:10px; }
 
 /* desna traka (X centriran i traka zalijepljena uz rub) */
 .notif-delete-section{
@@ -279,7 +244,7 @@
 }
 
 /* Ostalo u obavijesti */
-.notif-shop{ font-size:.85rem; color:var(--muted); }
+.notif-shop{ font-size:.85rem; color:var(--muted); padding-top: 0.3rem; }
 .notif-empty{ margin:0; padding:1rem; color:var(--muted); text-align:center; }
 
 /* Responsive */
@@ -319,3 +284,31 @@
   color:#1976d2; text-decoration:none;
 }
 .notif-shop a:hover{ text-decoration:underline; }
+
+.notif-remove {
+  all: unset;                 
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;                 
+  height: 100%;
+  background: rgba(0,0,0,0.05); 
+  border-left: 1px solid var(--border, rgba(0,0,0,0.1));
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  box-sizing: border-box;   /* sprječava pomak kod bordera */
+  transition: background 0.2s, color 0.2s; /* glatki hover */
+}
+
+.notif-remove:hover {
+  background: rgba(255,0,0,0.1); 
+  color: var(--danger);
+}
+
+:root[data-theme="dark"] .notif-remove:hover {
+  background: rgba(255,255,255,0.08);
+}
