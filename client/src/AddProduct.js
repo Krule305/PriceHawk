@@ -1,5 +1,5 @@
 import Modal from "react-modal";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { FiX } from "react-icons/fi";
 import "./AddProduct.css";
@@ -9,18 +9,19 @@ Modal.setAppElement("#root");
 const API = (process.env.REACT_APP_API_BASE_URL || "http://localhost:5000").replace(/\/$/, "");
 
 export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
-  // Stanja za formu
   const [name, setName] = useState("");
   const [category, setCategory] = useState("");
   const [targetPrice, setTargetPrice] = useState("");
   const [urls, setUrls] = useState([""]);
 
-  // Scraping status
   const [scrapedData, setScrapedData] = useState({});
   const [isScraping, setIsScraping] = useState(false);
   const [scrapeMsg, setScrapeMsg] = useState("");
 
-  // Postavljanje početnih vrijednosti kod otvaranja ili uređivanja
+  // Debounce & "latest-only" guard
+  const scrapeTimer = useRef(null);
+  const scrapeReqId = useRef(0); 
+
   useEffect(() => {
     if (initialData) {
       setName(initialData.name || "");
@@ -45,25 +46,31 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
     }
   }, [initialData, isOpen]);
 
-  // Scrape svih URL-ova
-  const scrapeAllUrls = async (urlList) => {
+  const scrapeAllUrls = async (urlList, reqId) => {
     const clean = (urlList || [])
       .map((u) => (u || "").trim())
       .filter((u) => /^https?:\/\//i.test(u));
 
     if (!clean.length) {
-      setScrapedData({});
-      setScrapeMsg("");
+      if (reqId === scrapeReqId.current) {
+        setScrapedData({});
+        setScrapeMsg("");
+        setIsScraping(false);
+      }
       return;
     }
 
     try {
-      setIsScraping(true);
-      setScrapeMsg("Dohvaćam cijenu…");
+      if (reqId === scrapeReqId.current) {
+        setIsScraping(true);
+        setScrapeMsg("Dohvaćam cijenu…");
+      }
 
       const res = await axios.post(`${API}/api/scrape`, { urls: clean });
       const arr = Array.isArray(res.data) ? res.data : [];
       const valid = arr.filter((x) => x && x.price != null);
+
+      if (reqId !== scrapeReqId.current) return;
 
       if (!valid.length) {
         setScrapedData({});
@@ -79,73 +86,92 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
         imageUrl: firstImage,
         bestUrl: lowest.url || clean[0],
       });
-      setScrapeMsg("");
+      setScrapeMsg(""); // ok
     } catch (err) {
+      if (reqId !== scrapeReqId.current) return;
       console.error("Greška kod scrapanja:", err?.message || err);
       setScrapedData({});
       setScrapeMsg("Greška pri dohvaćanju cijene. Pokušaj drugi URL.");
     } finally {
-      setIsScraping(false);
+      if (reqId === scrapeReqId.current) setIsScraping(false);
     }
   };
 
-  // Promjena URL-a u inputu
+  const triggerScrapeDebounced = (urlsArray) => {
+    const thisReq = ++scrapeReqId.current;
+    clearTimeout(scrapeTimer.current);
+    scrapeTimer.current = setTimeout(() => scrapeAllUrls(urlsArray, thisReq), 600);
+  };
+
   const handleUrlChange = (index, value) => {
     const newUrls = [...urls];
     newUrls[index] = value;
     setUrls(newUrls);
+
     setScrapedData({});
     setScrapeMsg("");
 
-    const validUrls = newUrls.filter((url) => /^https?:\/\//i.test(url));
-    if (validUrls.length) scrapeAllUrls(validUrls);
+    const validUrls = newUrls.filter((u) => /^https?:\/\//i.test(u));
+    if (validUrls.length) {
+      setIsScraping(true);
+      triggerScrapeDebounced(validUrls);
+    } else {
+      clearTimeout(scrapeTimer.current);
+      scrapeReqId.current++;
+      setIsScraping(false);
+    }
   };
 
-  // Dodavanje/uklanjanje URL polja
   const handleAddUrl = () => setUrls((prev) => [...prev, ""]);
+
   const handleRemoveUrl = (index) => {
     if (urls.length <= 1) return;
     const newUrls = urls.filter((_, i) => i !== index);
     setUrls(newUrls);
     setScrapedData({});
     setScrapeMsg("");
-    const validUrls = newUrls.filter((url) => /^https?:\/\//i.test(url));
-    if (validUrls.length) scrapeAllUrls(validUrls);
+
+    const validUrls = newUrls.filter((u) => /^https?:\/\//i.test(u));
+    if (validUrls.length) {
+      setIsScraping(true);
+      triggerScrapeDebounced(validUrls);
+    } else {
+      clearTimeout(scrapeTimer.current);
+      scrapeReqId.current++;
+      setIsScraping(false);
+    }
   };
 
-  // Spremanje proizvoda
-const handleSave = () => {
-  if (!name.trim() || !urls[0].trim()) {
-    alert("Naziv i barem jedan URL su obavezni.");
-    return;
-  }
-  if (isScraping) {
-    alert("Pričekaj da scraping završi.");
-    return;
-  }
-  if (typeof scrapedData.price !== "number") {
-    setScrapeMsg("Ne možete spremiti bez važeće cijene.");
-    return;
-  }
+  const handleSave = () => {
+    if (!name.trim() || !urls[0].trim()) {
+      setScrapeMsg("Naziv i barem jedan URL su obavezni.");
+      return;
+    }
+    if (isScraping) {
+      setScrapeMsg("Pričekaj da scraping završi.");
+      return;
+    }
+    if (typeof scrapedData.price !== "number") {
+      setScrapeMsg("Ne možete spremiti bez važeće cijene.");
+      return;
+    }
 
-  const parsedTarget = targetPrice === "" ? null : parseFloat(targetPrice);
+    const parsedTarget = targetPrice === "" ? null : parseFloat(targetPrice);
 
-  const newProduct = {
-    name: name.trim(),
-    category: category.trim() || "Razno",
-    targetPrice: Number.isFinite(parsedTarget) ? parsedTarget : null,
-    urls: urls.map((u) => (u || "").trim()).filter(Boolean),
-    imageUrl: scrapedData?.imageUrl || null,
-    scrapedPrice: scrapedData?.price ?? null,
-    bestUrl: scrapedData?.bestUrl || null,
-    createdAt: initialData?.createdAt || new Date(),
+    const newProduct = {
+      name: name.trim(),
+      category: (category || "").trim() || "Razno",
+      targetPrice: Number.isFinite(parsedTarget) ? parsedTarget : null,
+      urls: urls.map((u) => (u || "").trim()).filter(Boolean),
+      imageUrl: scrapedData?.imageUrl || null,
+      scrapedPrice: scrapedData?.price ?? null,
+      bestUrl: scrapedData?.bestUrl || null,
+      createdAt: initialData?.createdAt || new Date(),
+    };
+    if (initialData?.id) newProduct.id = initialData.id;
+
+    onSave(newProduct);
   };
-
-  if (initialData?.id) newProduct.id = initialData.id;
-
-  onSave(newProduct);
-};
-
 
   if (!isOpen) return null;
 
@@ -190,6 +216,7 @@ const handleSave = () => {
           <button type="button" onClick={handleAddUrl} className="add-url">
             + Dodaj još jedan URL
           </button>
+        </div>
 
         {/* Naziv */}
         <div className="form-section">
@@ -251,14 +278,13 @@ const handleSave = () => {
             className={`save-btn ${isScraping || typeof scrapedData.price !== "number" ? "disabled" : ""}`}
             disabled={isScraping || typeof scrapedData.price !== "number"}
           >
-            {isScraping ? "Pričekajte..." : "Spremi"}
+            {isScraping ? "Čekam scraping..." : "Spremi"}
           </button>
         </div>
 
-        {/* status/poruke ispod URL sekcije */}
-          {isScraping && <div className="scrape-status info">Dohvaćam cijenu…</div>}
-          {!isScraping && scrapeMsg && <div className="scrape-status error">{scrapeMsg}</div>}
-        </div>
+        {/* Status/poruka ispod gumba */}
+        {isScraping && <div className="scrape-status info">Dohvaćam cijenu…</div>}
+        {!isScraping && scrapeMsg && <div className="scrape-status error">{scrapeMsg}</div>}
       </div>
     </Modal>
   );
