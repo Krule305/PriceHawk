@@ -1,5 +1,5 @@
 import Modal from "react-modal";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { FiX } from "react-icons/fi";
 import "./AddProduct.css";
@@ -13,13 +13,9 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
   const [category, setCategory] = useState("");
   const [targetPrice, setTargetPrice] = useState("");
   const [urls, setUrls] = useState([""]);
-
   const [scrapedData, setScrapedData] = useState({});
   const [isScraping, setIsScraping] = useState(false);
   const [scrapeMsg, setScrapeMsg] = useState("");
-
-  const scrapeTimer = useRef(null);
-  const scrapeReqId = useRef(0);
 
   useEffect(() => {
     if (initialData) {
@@ -33,7 +29,6 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
         bestUrl: initialData.bestUrl || "",
       });
       setScrapeMsg("");
-      setIsScraping(false);
     } else if (isOpen) {
       setName("");
       setCategory("");
@@ -41,42 +36,26 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
       setUrls([""]);
       setScrapedData({});
       setScrapeMsg("");
-      setIsScraping(false);
     }
   }, [initialData, isOpen]);
 
-  const scrapeAllUrls = async (urlList, reqId) => {
-    const clean = (urlList || [])
-      .map((u) => (u || "").trim())
-      .filter((u) => /^https?:\/\//i.test(u));
-
-    if (!clean.length) {
-      if (reqId === scrapeReqId.current) {
-        setScrapedData({});
-        setScrapeMsg("");
-        setIsScraping(false);
-      }
-      return;
-    }
-
+  const scrapeAllUrls = async (urlList) => {
+    setIsScraping(true);
+    setScrapeMsg("");
     try {
-      if (reqId === scrapeReqId.current) {
-        setIsScraping(true);
-        setScrapeMsg("Dohvaćam cijenu…");
-      }
+      const clean = (urlList || [])
+        .map((u) => (u || "").trim())
+        .filter((u) => /^https?:\/\//i.test(u));
 
-      const res = await axios.post(`${API}/api/scrape`, { urls: clean });
-
-      if (reqId !== scrapeReqId.current) return;
-
-      if (!Array.isArray(res.data)) {
-        console.warn("[scrape] Neočekivan format (nije array):", res.data);
+      if (!clean.length) {
         setScrapedData({});
-        setScrapeMsg("Nažalost, nije moguće dohvatiti cijenu za ovaj URL.");
         return;
       }
 
-      const valid = res.data.filter((x) => x && x.price != null);
+      const res = await axios.post(`${API}/api/scrape`, { urls: clean });
+      const arr = Array.isArray(res.data) ? res.data : [];
+      const valid = arr.filter((x) => x && x.price != null);
+
       if (!valid.length) {
         setScrapedData({});
         setScrapeMsg("Nažalost, nije moguće dohvatiti cijenu za ovaj URL.");
@@ -93,19 +72,12 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
       });
       setScrapeMsg("");
     } catch (err) {
-      if (reqId !== scrapeReqId.current) return;
-      console.error("Greška kod scrapanja:", err?.response?.data || err?.message || err);
+      console.error("Greška kod scrapanja:", err?.message || err);
       setScrapedData({});
       setScrapeMsg("Greška pri dohvaćanju cijene. Pokušaj drugi URL.");
     } finally {
-      if (reqId === scrapeReqId.current) setIsScraping(false);
+      setIsScraping(false);
     }
-  };
-
-  const triggerScrapeDebounced = (urlsArray) => {
-    const thisReq = ++scrapeReqId.current;
-    clearTimeout(scrapeTimer.current);
-    scrapeTimer.current = setTimeout(() => scrapeAllUrls(urlsArray, thisReq), 600);
   };
 
   const handleUrlChange = (index, value) => {
@@ -113,18 +85,8 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
     newUrls[index] = value;
     setUrls(newUrls);
 
-    setScrapedData({});
-    setScrapeMsg("");
-
-    const validUrls = newUrls.filter((u) => /^https?:\/\//i.test(u));
-    if (validUrls.length) {
-      setIsScraping(true);
-      triggerScrapeDebounced(validUrls);
-    } else {
-      clearTimeout(scrapeTimer.current);
-      scrapeReqId.current++;
-      setIsScraping(false);
-    }
+    const validUrls = newUrls.filter((url) => url.startsWith("http"));
+    if (validUrls.length) scrapeAllUrls(validUrls);
   };
 
   const handleAddUrl = () => setUrls((prev) => [...prev, ""]);
@@ -134,21 +96,10 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
     const newUrls = urls.filter((_, i) => i !== index);
     setUrls(newUrls);
 
-    setScrapedData({});
-    setScrapeMsg("");
-
-    const validUrls = newUrls.filter((u) => /^https?:\/\//i.test(u));
-    if (validUrls.length) {
-      setIsScraping(true);
-      triggerScrapeDebounced(validUrls);
-    } else {
-      clearTimeout(scrapeTimer.current);
-      scrapeReqId.current++;
-      setIsScraping(false);
-    }
+    const validUrls = newUrls.filter((url) => url.startsWith("http"));
+    if (validUrls.length) scrapeAllUrls(validUrls);
   };
 
-  // Save
   const handleSave = () => {
     if (!name.trim() || !urls[0].trim()) {
       setScrapeMsg("Naziv i barem jedan URL su obavezni.");
@@ -194,7 +145,6 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
       <div className="modal-body">
         <h2>{initialData ? "Uredi proizvod" : "Dodaj novi proizvod"}</h2>
 
-        {/* URL-ovi */}
         <div className="form-section">
           <label>URL proizvoda:</label>
           {urls.map((url, i) => (
@@ -202,10 +152,6 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
               <input
                 value={url}
                 onChange={(e) => handleUrlChange(i, e.target.value)}
-                onPaste={(e) => {
-                  const v = (e.clipboardData || window.clipboardData).getData("text");
-                  handleUrlChange(i, v);
-                }}
                 placeholder="https://example.com/proizvod"
               />
               {urls.length > 1 && (
@@ -226,13 +172,11 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
           </button>
         </div>
 
-        {/* Naziv */}
         <div className="form-section">
           <label>Naziv proizvoda:</label>
           <input value={name} onChange={(e) => setName(e.target.value)} />
         </div>
 
-        {/* Kategorija */}
         <div className="form-section">
           <label>Kategorija:</label>
           <select value={category} onChange={(e) => setCategory(e.target.value)}>
@@ -247,7 +191,6 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
           </select>
         </div>
 
-        {/* Željena cijena */}
         <div className="form-section">
           <label>Željena cijena (€):</label>
           <input
@@ -260,14 +203,12 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
           />
         </div>
 
-        {/* Pronađena cijena */}
         {typeof scrapedData.price === "number" && (
           <p className="scraped-price">
             Najniža pronađena cijena: <strong>{scrapedData.price.toFixed(2)} €</strong>
           </p>
         )}
 
-        {/* Slika */}
         {scrapedData.imageUrl && (
           <div className="image-preview">
             <label>Prepoznata slika:</label>
@@ -275,7 +216,6 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
           </div>
         )}
 
-        {/* Gumbi */}
         <div className="modal-footer">
           <button type="button" onClick={onClose} className="cancel-btn">
             Odustani
@@ -290,7 +230,6 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
           </button>
         </div>
 
-        {/* Poruke ispod gumba */}
         {isScraping && <div className="scrape-status info">Dohvaćam cijenu…</div>}
         {!isScraping && scrapeMsg && <div className="scrape-status error">{scrapeMsg}</div>}
       </div>
