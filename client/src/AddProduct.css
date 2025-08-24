@@ -1,4 +1,3 @@
-
 /* Overlay i osnovni modal */
 .modal-overlay {
   position: fixed;
@@ -60,13 +59,14 @@
 .form-section input,
 .form-section select {
   width: 100%;
-  padding: 0.6rem;
+  padding: 0.6rem 0.75rem;
   font-size: 0.95rem;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 10px;
   transition: border-color 0.2s, background-color 0.2s;
   background-color: var(--card);
   color: var(--text);
+  box-sizing: border-box;
 }
 
 .form-section input:focus,
@@ -77,13 +77,15 @@
 
 /* URL polja */
 .url-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   gap: 0.5rem;
   margin-bottom: 0.4rem;
 }
 
 .url-row input {
-  flex: 1;
+  width: 100%;
+  min-width: 0;
 }
 
 .add-url,
@@ -91,9 +93,10 @@
   background: none;
   border: none;
   color: var(--primary);
-  font-size: 0.9rem;
+  font-size: 1rem;
   cursor: pointer;
   padding: 4px;
+  padding-bottom: 20px;
   border-radius: 4px;
   transition: background-color 0.2s;
 }
@@ -152,6 +155,14 @@
   background-color: rgba(255, 255, 255, 0.06);
 }
 
+.scrape-status {
+  margin-top: 20px;
+  font-size: 0.9rem;
+  text-align: center;
+}
+.scrape-status.info { color: var(--muted); }
+.scrape-status.error { color: var(--danger); }
+
 
 /* Footer gumba */
 .modal-footer {
@@ -179,6 +190,14 @@
 .save-btn:hover {
   background-color: var(--primary-hover);
 }
+
+.save-btn:disabled,
+.save-btn.disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 
 .cancel-btn {
   background-color: rgba(0, 0, 0, 0.04);

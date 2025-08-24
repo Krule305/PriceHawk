@@ -14,8 +14,11 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
   const [category, setCategory] = useState("");
   const [targetPrice, setTargetPrice] = useState("");
   const [urls, setUrls] = useState([""]);
+
+  // Scraping status
   const [scrapedData, setScrapedData] = useState({});
   const [isScraping, setIsScraping] = useState(false);
+  const [scrapeMsg, setScrapeMsg] = useState("");
 
   // Postavljanje početnih vrijednosti kod otvaranja ili uređivanja
   useEffect(() => {
@@ -26,30 +29,37 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
       setUrls(initialData.urls?.length ? initialData.urls : [""]);
       setScrapedData({
         imageUrl: initialData.imageUrl || "",
-        price: initialData.scrapedPrice || "",
+        price: initialData.scrapedPrice ?? null,
         bestUrl: initialData.bestUrl || "",
       });
+      setScrapeMsg("");
+      setIsScraping(false);
     } else if (isOpen) {
       setName("");
       setCategory("");
       setTargetPrice("");
       setUrls([""]);
       setScrapedData({});
+      setScrapeMsg("");
+      setIsScraping(false);
     }
   }, [initialData, isOpen]);
 
-  // Funkcija za scraping svih URL-ova
+  // Scrape svih URL-ova
   const scrapeAllUrls = async (urlList) => {
-    setIsScraping(true);
-    try {
-      const clean = (urlList || [])
-        .map((u) => (u || "").trim())
-        .filter((u) => /^https?:\/\//i.test(u));
+    const clean = (urlList || [])
+      .map((u) => (u || "").trim())
+      .filter((u) => /^https?:\/\//i.test(u));
 
-      if (!clean.length) {
-        setScrapedData({});
-        return;
-      }
+    if (!clean.length) {
+      setScrapedData({});
+      setScrapeMsg("");
+      return;
+    }
+
+    try {
+      setIsScraping(true);
+      setScrapeMsg("Dohvaćam cijenu…");
 
       const res = await axios.post(`${API}/api/scrape`, { urls: clean });
       const arr = Array.isArray(res.data) ? res.data : [];
@@ -57,6 +67,7 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
 
       if (!valid.length) {
         setScrapedData({});
+        setScrapeMsg("Nažalost, nije moguće dohvatiti cijenu za ovaj URL.");
         return;
       }
 
@@ -68,9 +79,11 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
         imageUrl: firstImage,
         bestUrl: lowest.url || clean[0],
       });
+      setScrapeMsg("");
     } catch (err) {
       console.error("Greška kod scrapanja:", err?.message || err);
       setScrapedData({});
+      setScrapeMsg("Greška pri dohvaćanju cijene. Pokušaj drugi URL.");
     } finally {
       setIsScraping(false);
     }
@@ -81,54 +94,59 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
     const newUrls = [...urls];
     newUrls[index] = value;
     setUrls(newUrls);
+    setScrapedData({});
+    setScrapeMsg("");
 
-    const validUrls = newUrls.filter((url) => url.startsWith("http"));
+    const validUrls = newUrls.filter((url) => /^https?:\/\//i.test(url));
     if (validUrls.length) scrapeAllUrls(validUrls);
   };
 
-  // Dodavanje novog URL polja
+  // Dodavanje/uklanjanje URL polja
   const handleAddUrl = () => setUrls((prev) => [...prev, ""]);
-
-  // Uklanjanje URL polja
   const handleRemoveUrl = (index) => {
     if (urls.length <= 1) return;
     const newUrls = urls.filter((_, i) => i !== index);
     setUrls(newUrls);
-
-    const validUrls = newUrls.filter((url) => url.startsWith("http"));
+    setScrapedData({});
+    setScrapeMsg("");
+    const validUrls = newUrls.filter((url) => /^https?:\/\//i.test(url));
     if (validUrls.length) scrapeAllUrls(validUrls);
   };
 
   // Spremanje proizvoda
-  const handleSave = () => {
-    if (!name.trim() || !urls[0].trim()) {
-      alert("Naziv i barem jedan URL su obavezni.");
-      return;
-    }
-    if (isScraping) {
-      alert("Pričekaj da scraping završi.");
-      return;
-    }
+const handleSave = () => {
+  if (!name.trim() || !urls[0].trim()) {
+    alert("Naziv i barem jedan URL su obavezni.");
+    return;
+  }
+  if (isScraping) {
+    alert("Pričekaj da scraping završi.");
+    return;
+  }
+  if (typeof scrapedData.price !== "number") {
+    setScrapeMsg("Ne možete spremiti bez važeće cijene.");
+    return;
+  }
 
-    const parsedTarget = targetPrice === "" ? null : parseFloat(targetPrice);
+  const parsedTarget = targetPrice === "" ? null : parseFloat(targetPrice);
 
-    const newProduct = {
-      name: name.trim(),
-      category: category.trim(),
-      targetPrice: Number.isFinite(parsedTarget) ? parsedTarget : null,
-      urls: urls.map((u) => (u || "").trim()).filter(Boolean),
-      imageUrl: scrapedData?.imageUrl || null,
-      scrapedPrice: scrapedData?.price ?? null,
-      bestUrl: scrapedData?.bestUrl || null,
-      createdAt: initialData?.createdAt || new Date(),
-    };
-
-    if (initialData?.id) newProduct.id = initialData.id;
-
-    onSave(newProduct);
+  const newProduct = {
+    name: name.trim(),
+    category: category.trim() || "Razno",
+    targetPrice: Number.isFinite(parsedTarget) ? parsedTarget : null,
+    urls: urls.map((u) => (u || "").trim()).filter(Boolean),
+    imageUrl: scrapedData?.imageUrl || null,
+    scrapedPrice: scrapedData?.price ?? null,
+    bestUrl: scrapedData?.bestUrl || null,
+    createdAt: initialData?.createdAt || new Date(),
   };
 
-  // Ako modal nije otvoren, ništa ne rendera
+  if (initialData?.id) newProduct.id = initialData.id;
+
+  onSave(newProduct);
+};
+
+
   if (!isOpen) return null;
 
   return (
@@ -142,7 +160,7 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
       <div className="modal-body">
         <h2>{initialData ? "Uredi proizvod" : "Dodaj novi proizvod"}</h2>
 
-        {/* Polje za URL-ove */}
+        {/* URL-ovi */}
         <div className="form-section">
           <label>URL proizvoda:</label>
           {urls.map((url, i) => (
@@ -150,6 +168,10 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
               <input
                 value={url}
                 onChange={(e) => handleUrlChange(i, e.target.value)}
+                onPaste={(e) => {
+                  const v = (e.clipboardData || window.clipboardData).getData("text");
+                  handleUrlChange(i, v);
+                }}
                 placeholder="https://example.com/proizvod"
               />
               {urls.length > 1 && (
@@ -168,7 +190,6 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
           <button type="button" onClick={handleAddUrl} className="add-url">
             + Dodaj još jedan URL
           </button>
-        </div>
 
         {/* Naziv */}
         <div className="form-section">
@@ -204,14 +225,14 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
           />
         </div>
 
-        {/* Prikaz scrapane cijene */}
+        {/* Pronađena cijena */}
         {typeof scrapedData.price === "number" && (
           <p className="scraped-price">
             Najniža pronađena cijena: <strong>{scrapedData.price.toFixed(2)} €</strong>
           </p>
         )}
 
-        {/* Prikaz slike */}
+        {/* Slika */}
         {scrapedData.imageUrl && (
           <div className="image-preview">
             <label>Prepoznata slika:</label>
@@ -224,9 +245,19 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
           <button type="button" onClick={onClose} className="cancel-btn">
             Odustani
           </button>
-          <button type="button" onClick={handleSave} className="save-btn" disabled={isScraping}>
-            {isScraping ? "Čekam scraping..." : "Spremi"}
+          <button
+            type="button"
+            onClick={handleSave}
+            className={`save-btn ${isScraping || typeof scrapedData.price !== "number" ? "disabled" : ""}`}
+            disabled={isScraping || typeof scrapedData.price !== "number"}
+          >
+            {isScraping ? "Pričekajte..." : "Spremi"}
           </button>
+        </div>
+
+        {/* status/poruke ispod URL sekcije */}
+          {isScraping && <div className="scrape-status info">Dohvaćam cijenu…</div>}
+          {!isScraping && scrapeMsg && <div className="scrape-status error">{scrapeMsg}</div>}
         </div>
       </div>
     </Modal>
