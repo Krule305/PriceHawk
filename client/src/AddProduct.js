@@ -18,9 +18,8 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
   const [isScraping, setIsScraping] = useState(false);
   const [scrapeMsg, setScrapeMsg] = useState("");
 
-  // Debounce & "latest-only" guard
   const scrapeTimer = useRef(null);
-  const scrapeReqId = useRef(0); 
+  const scrapeReqId = useRef(0);
 
   useEffect(() => {
     if (initialData) {
@@ -67,11 +66,17 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
       }
 
       const res = await axios.post(`${API}/api/scrape`, { urls: clean });
-      const arr = Array.isArray(res.data) ? res.data : [];
-      const valid = arr.filter((x) => x && x.price != null);
 
       if (reqId !== scrapeReqId.current) return;
 
+      if (!Array.isArray(res.data)) {
+        console.warn("[scrape] Neočekivan format (nije array):", res.data);
+        setScrapedData({});
+        setScrapeMsg("Nažalost, nije moguće dohvatiti cijenu za ovaj URL.");
+        return;
+      }
+
+      const valid = res.data.filter((x) => x && x.price != null);
       if (!valid.length) {
         setScrapedData({});
         setScrapeMsg("Nažalost, nije moguće dohvatiti cijenu za ovaj URL.");
@@ -86,10 +91,10 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
         imageUrl: firstImage,
         bestUrl: lowest.url || clean[0],
       });
-      setScrapeMsg(""); // ok
+      setScrapeMsg("");
     } catch (err) {
       if (reqId !== scrapeReqId.current) return;
-      console.error("Greška kod scrapanja:", err?.message || err);
+      console.error("Greška kod scrapanja:", err?.response?.data || err?.message || err);
       setScrapedData({});
       setScrapeMsg("Greška pri dohvaćanju cijene. Pokušaj drugi URL.");
     } finally {
@@ -128,6 +133,7 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
     if (urls.length <= 1) return;
     const newUrls = urls.filter((_, i) => i !== index);
     setUrls(newUrls);
+
     setScrapedData({});
     setScrapeMsg("");
 
@@ -142,6 +148,7 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
     }
   };
 
+  // Save
   const handleSave = () => {
     if (!name.trim() || !urls[0].trim()) {
       setScrapeMsg("Naziv i barem jedan URL su obavezni.");
@@ -168,6 +175,7 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
       bestUrl: scrapedData?.bestUrl || null,
       createdAt: initialData?.createdAt || new Date(),
     };
+
     if (initialData?.id) newProduct.id = initialData.id;
 
     onSave(newProduct);
@@ -282,7 +290,7 @@ export default function AddProduct({ isOpen, onClose, onSave, initialData }) {
           </button>
         </div>
 
-        {/* Status/poruka ispod gumba */}
+        {/* Poruke ispod gumba */}
         {isScraping && <div className="scrape-status info">Dohvaćam cijenu…</div>}
         {!isScraping && scrapeMsg && <div className="scrape-status error">{scrapeMsg}</div>}
       </div>
