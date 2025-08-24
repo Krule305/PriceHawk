@@ -8,7 +8,7 @@ export default function WelcomePage() {
     // Dobrodošlica
     <div className="welcome-container">
       <div className="welcome-box">
-        <h1>Dobrodošli u PriceTracker</h1>
+        <h1>Dobrodošli u PriceHawk</h1>
         <p>
           Pratite cijene svojih omiljenih proizvoda iz više trgovina i budite
           prvi koji će saznati kada cijena padne ispod željene!
