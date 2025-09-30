@@ -304,6 +304,106 @@ async function scrapeSinglePage(page, url) {
       return { url, imageUrl, price };
     }
 
+    // PolleoSport
+    if (hostname.includes("polleosport.hr")) {
+      const ld = await extractJsonLd(page);
+      let imageUrl =
+        ld.image ||
+        (await page.$eval('meta[property="og:image"]', el => el.content).catch(() => null)) ||
+        (await page.$eval('.product-media img', el => el.src).catch(() => null)) ||
+        (await page.$eval('.gallery img', el => el.src).catch(() => null));
+
+      let priceText = ld.price;
+
+      if (!priceText) {
+        priceText =
+          (await page.$eval('meta[property="product:price:amount"]', el => el.getAttribute('content')).catch(() => null)) ||
+          (await page.$eval('meta[property="og:price:amount"]', el => el.getAttribute('content')).catch(() => null));
+      }
+
+      if (!priceText) {
+        priceText =
+          (await page.$eval('[itemprop="price"]', el => (el.getAttribute('content') || el.textContent).trim()).catch(() => null)) ||
+          (await page.$eval('[data-price-amount]', el => el.getAttribute('data-price-amount')).catch(() => null)) ||
+          (await page.$eval('.product-info-main .price, .prices .price, .price', el => el.textContent.trim()).catch(() => null));
+      }
+
+    if (!priceText) {
+        // 4) Tekst fallback: preferiraj broj nakon "Cijena", ignoriraj €/mj i €/kg
+        priceText = await page.evaluate(() => {
+          const t = document.body.innerText || '';
+          // prvo: uzmi broj koji dolazi nakon "Cijena"
+          const m1 = t.match(/Cijena[\s\S]{0,200}?(\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{2}))\s*€(?!\s*\/)/i);
+          if (m1) return m1[1];
+          // zatim: prva cijena koja nije rate (€/mj) ni jedinica (€/kg)
+          const all = [...t.matchAll(/(\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{2}))\s*€(?!\s*\/)/gi)]
+            .map(m => m[0])
+            .filter(s => !/€\s*\/\s*(mj|kg)/i.test(s));
+          if (all.length) {
+            const num = all[0].match(/(\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{2}))/);
+            return num ? num[1] : null;
+          }
+          return null;
+        });
+      }
+
+      const price = parsePrice(priceText);
+      if (price == null) await debugSnapshot(page, url, "polleo_noprice");
+      return { url, imageUrl, price };
+    }
+
+  // GymBeam
+  if (hostname.includes("gymbeam.hr") || hostname.includes("gymbeam.com")) {
+      await page.waitForSelector(
+        ".product-info-price, .price-box, [itemprop='price'], [data-price-amount], meta[property='product:price:amount']",
+        { timeout: 8000 }
+      ).catch(() => null);
+      const ld = await extractJsonLd(page);
+      let imageUrl =
+        ld.image ||
+        (await page.$eval('meta[property="og:image"]', el => el.content).catch(() => null)) ||
+        (await page.$eval(".product.media img, .product-gallery img, .gallery-placeholder img, .product-image-photo", el => el.src).catch(() => null));
+
+      let priceText = ld.price;
+
+      if (!priceText) {
+        priceText =
+          (await page.$eval('meta[property="product:price:amount"]', el => el.getAttribute("content")).catch(() => null)) ||
+          (await page.$eval('meta[itemprop="price"]', el => el.getAttribute("content")).catch(() => null)) ||
+          (await page.$eval('meta[property="og:price:amount"]', el => el.getAttribute("content")).catch(() => null));
+      }
+
+      if (!priceText) {
+        priceText =
+          (await page.$eval("[data-price-amount]", el => el.getAttribute("data-price-amount")).catch(() => null)) ||
+          (await page.$eval(".product-info-price .price", el => el.textContent.trim()).catch(() => null)) ||
+          (await page.$eval(".price-box .price", el => el.textContent.trim()).catch(() => null)) ||
+          (await page.$eval("[itemprop='price']", el => (el.getAttribute("content") || el.textContent).trim()).catch(() => null)) ||
+          (await page.$eval(".price-wrapper .price", el => el.textContent.trim()).catch(() => null));
+      }
+
+      if (!priceText) {
+        // 4) Fallback kroz tekst: preferiraj broj nakon "Cijena", ignoriraj €/mj i €/kg
+        priceText = await page.evaluate(() => {
+          const t = document.body.innerText || "";
+          const after = t.match(/Cijena[\s\S]{0,200}?(\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{2}))\s*€(?!\s*\/)/i);
+          if (after) return after[1];
+          const all = [...t.matchAll(/(\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{2}))\s*€(?!\s*\/)/gi)]
+            .map(m => m[0])
+            .filter(s => !/€\s*\/\s*(mj|kg)/i.test(s)); // preskoči rate i jedinice
+          if (all.length) {
+            const num = all[0].match(/(\d{1,3}(?:[.\s]\d{3})*(?:[.,]\d{2}))/);
+            return num ? num[1] : null;
+          }
+          return null;
+        });
+      }
+
+      const price = parsePrice(priceText);
+      if (price == null) await debugSnapshot(page, url, "gymbeam_noprice");
+      return { url, imageUrl, price };
+    }
+
     // generički fallback
     let imageUrl = await page.$eval('meta[property="og:image"]', (el) => el.content).catch(() => null);
     if (!imageUrl) {
@@ -318,8 +418,19 @@ async function scrapeSinglePage(page, url) {
       });
     }
 
-    const priceSelectors = [
+        const priceSelectors = [
       '[itemprop="price"]',
+      'meta[itemprop="price"]',
+      'meta[property="product:price:amount"]',
+      'meta[property="og:price:amount"]',
+      "[data-price-amount]",
+      ".product-info-price .price",
+      ".price-box .price",
+      ".price-wrapper .price",
+      ".price-final_price .price",
+      ".price-final .price",
+      ".price__final",
+      ".final-price",
       '[class*="price__item"]',
       '[class*="price"]',
       '[class*="cijena"]',
@@ -335,6 +446,7 @@ async function scrapeSinglePage(page, url) {
       ".price-actual",
       ".price-final",
     ];
+
 
     let rawPrice = null;
     for (const sel of priceSelectors) {
