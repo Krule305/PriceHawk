@@ -55,21 +55,23 @@
   font-weight: 500;
 }
 
-/* Gumb odustani */
+/* Gumb odustani (dark-only) */
 .cancel-btn {
-  background-color: rgba(0,0,0,0.04);
+  background-color: rgba(255,255,255,0.06);
   color: var(--text);
 }
-.cancel-btn:hover { background-color: rgba(0,0,0,0.08); }
-:root[data-theme="dark"] .cancel-btn { background-color: rgba(255,255,255,0.06); }
-:root[data-theme="dark"] .cancel-btn:hover { background-color: rgba(255,255,255,0.12); }
+.cancel-btn:hover {
+  background-color: rgba(255,255,255,0.12);
+}
 
 /* Gumb obriši */
 .delete-btn {
   background-color: var(--danger);
-  color: white;
+  color: #fff;
 }
-.delete-btn:hover { background-color: var(--danger-hover); }
+.delete-btn:hover {
+  background-color: var(--danger-hover);
+}
 
 /* Responsivnost za mobitele */
 @media (max-width: 480px) {

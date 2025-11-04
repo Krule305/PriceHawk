@@ -6,9 +6,9 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 
 
-**PriceTracker Web App**
+**PriceHawk Web App**
 
-PriceTracker je web aplikacija za praćenje cijena proizvoda u online trgovinama.
+PriceHawk je web aplikacija za praćenje cijena proizvoda u online trgovinama.
 Omogućuje unos URL-ova proizvoda, automatski scraping cijena te slanje obavijesti (u aplikaciji i e-mailom) kada cijena padne ispod željene.
 
 **Značajke:**

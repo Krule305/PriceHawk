@@ -1,25 +1,20 @@
-/* desna traka */
-.notif-delete-section{
-  background-color: color-mix(in srgb, var(--card) 92%, #000 8%);
-  /* ako color-mix nije podržan, ostavi fallback ispod */
-  background-color: rgba(0,0,0,0.04);
-  border-left: 1px solid var(--border, rgba(0,0,0,0.10));
+/* ========= CORE TOKENS (dark only) ========= */
+:root[data-theme="dark"] {
+  --bg: #1e1f22;
+  --card: #313338;
+  --text: #f2f3f5;
+  --muted: #b5bac1;
+  --border: #2e3035;
+  --overlay: rgba(0,0,0,0.6);
+  --primary: #5865f2;
+  --primary-hover: #4752c4;
+  --badge: #d83c3e;
+  --badge-text: #fff;
+  --shadow-1: 0 6px 20px rgba(0,0,0,.25);
+  --shadow-2: 0 18px 60px rgba(0,0,0,.35);
 }
 
-/* divider između cijena */
-.price-divider{
-  background: var(--text, #0f172a);
-  opacity: 0.20;
-}
-
-/* kartice/paneli koji imaju border bez definirane varijable */
-.notification-card,
-.modal-content{
-  /* ako negdje dodaš border, koristi fallback */
-  border: 1px solid var(--border, rgba(0,0,0,0.10));
-}
-
-/* Glavni kontejner dashboarda */
+/* ========= LAYOUT & CONTAINERS ========= */
 .dashboard-container{
   text-align:center;
   padding:2rem 1rem;
@@ -27,24 +22,18 @@
   color:var(--text);
 }
 
-/* Gornji header */
-.dashboard-header{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:0 1rem;
-  margin-bottom:2rem;
+.dashboard-header {
+  display: flex;
+  justify-content: space-between; /* lijevi i desni kraj */
+  align-items: center;
+  padding: 0.8rem 1.2rem;
+  margin: 0 1rem 2rem;
+  background: color-mix(in srgb, var(--card) 86%, #000 14%);
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-1);
 }
 
-/* Tekst dobrodošlice */
-.dashboard-welcome{
-  margin:0;
-  font-size:1.2rem;
-  font-weight:500;
-  color:var(--text);
-}
-
-/* Gornja kontrolna traka */
 .dashboard-top{
   display:flex;
   justify-content:space-between;
@@ -55,14 +44,49 @@
   padding:0 1rem;
 }
 
-/* Lijeva i desna strana kontrola */
-.left-controls,
-.right-controls{
-  display:flex;
-  align-items:center;
+.dashboard-welcome{
+  margin:0;
+  font-size:1.2rem;
+  font-weight:500;
+  color:var(--text);
 }
 
-/* Gumb: Dodaj proizvod */
+/* ========= ACTIONS (right header) ========= */
+.dashboard-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.notification-btn{ position:relative; }
+
+.notification-btn,
+.logout-btn{
+  background: color-mix(in srgb, var(--card) 90%, #000 10%);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:6px 8px;
+  cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:all .2s ease; color:var(--text);
+  box-shadow: var(--shadow-1);
+}
+.notification-btn:hover,
+.logout-btn:hover{
+  background: color-mix(in srgb, var(--card) 80%, #000 20%);
+  border-color: var(--primary);
+  color:#fff;
+}
+
+/* Badge obavijesti */
+.notif-badge{
+  position:absolute; top:-6px; right:-6px;
+  background:var(--badge); color:var(--badge-text);
+  font-size:.7rem; line-height:1; padding:3px 6px;
+  border-radius:999px; border:2px solid var(--card);
+}
+
+/* ========= PRIMARY BUTTONS ========= */
 .add-product-btn{
   background-color:var(--primary);
   color:#fff;
@@ -83,7 +107,7 @@
   transform:translateY(-1px);
 }
 
-/* Pretraga */
+/* ========= SEARCH ========= */
 .search-wrapper{ position:relative; display:inline-block; }
 .search-input{
   padding:.5rem 1rem;
@@ -91,10 +115,11 @@
   border:1px solid var(--border);
   border-radius:10px;
   width:250px; max-width:100%;
-  background-color:var(--card);
+  background: color-mix(in srgb, var(--card) 92%, #000 8%);
   color:var(--text);
   transition:border-color .2s;
   padding-right:2rem;
+  height: 20px;
 }
 .search-input:focus{ outline:none; border-color:var(--primary); }
 .clear-search{
@@ -103,25 +128,40 @@
 }
 .clear-search:hover{ color:var(--text); }
 
-/* Kategorije */
+/* ========= CATEGORIES ========= */
 .category-buttons{
   display:flex; flex-wrap:wrap; justify-content:center;
   gap:.6rem; margin:1rem 0 2rem;
 }
 .category-button{
-  padding:.4rem 1rem; border:1px solid var(--border); border-radius:10px;
-  background-color:var(--card); color:var(--text); font-size:.9rem; cursor:pointer;
-  transition:all .2s; font-weight:500;
+  padding:.4rem 1rem;
+  border:1px solid var(--border);
+  border-radius:999px;
+  background: color-mix(in srgb, var(--card) 90%, #000 10%);
+  color:var(--text);
+  font-size:.9rem; cursor:pointer; font-weight:500;
+  transition:all .2s;
 }
-.category-button:hover{ background-color:rgba(0,0,0,.04); }
-:root[data-theme="dark"] .category-button:hover{ background-color:rgba(255,255,255,.06); }
-.category-button.active{ background-color:var(--primary); color:#fff; border-color:var(--primary); }
+.category-button:hover{ background: color-mix(in srgb, var(--card) 80%, #000 20%); }
 
-/* Grid proizvoda */
+/* Aktivna kategorija – trajno obojana kao gumb "Dodaj novi proizvod" */
+.category-button.active {
+  background-color: var(--primary) !important;
+  color: #fff !important;
+  border-color: var(--primary) !important;
+}
+
+/* Hover neće promijeniti boju ako je aktivna */
+.category-button.active:hover {
+  background-color: var(--primary-hover) !important;
+}
+
+/* ========= GRID ========= */
 .product-grid{
   display:grid;
   grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));
-  gap:32px 25px; padding:3rem;
+  gap:32px 25px; padding:3rem; /* zadržano postojeće ponašanje */
+  background: transparent;
 }
 @media (max-width:768px){
   .product-grid{ padding:2rem 1.5rem; gap:24px 20px; }
@@ -130,46 +170,44 @@
   .product-grid{ padding:1.5rem 1rem; gap:20px 15px; }
 }
 
-/* Gumbi u headeru (zvono, tema, odjava) */
-.dashboard-actions{ display:flex; align-items:center; gap:10px; }
-.notification-btn{ position:relative; }
-.notification-btn,
-.logout-btn{
-  background-color:var(--card);
-  border:1px solid var(--border);
-  border-radius:8px;
-  padding:6px 8px;
-  cursor:pointer;
-  display:flex; align-items:center; justify-content:center;
-  transition:all .2s ease; color:var(--text);
+/* ========= CONTROLS ROW (deduped to final flex layout) ========= */
+.controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 1rem 0 0rem;
+  padding: 0 1rem;
+  flex-wrap: wrap;
 }
-.notification-btn:hover,
-.logout-btn:hover{
-  background-color:rgba(0,0,0,.04);
-  border-color:#999;
+.add-product-btn { flex-shrink: 0; }
+.controls-center{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+  flex:1;
+  text-align:center;
+  flex-wrap:wrap;
 }
-:root[data-theme="dark"] .notification-btn:hover,
-:root[data-theme="dark"] .logout-btn:hover{
-  background-color:rgba(255,255,255,.06);
-  border-color:var(--border);
+.search-wrapper { flex-shrink: 0; position: relative; }
+.search-input { width: 230px; max-width: 35vw; }
+
+@media (max-width: 900px) {
+  .controls-row { flex-direction: column; align-items: center; gap: 10px; }
+  .search-input { width: 90%; max-width: 400px; }
 }
 
-/* Badge obavijesti */
-.notif-badge{
-  position:absolute; top:-6px; right:-6px;
-  background:var(--badge); color:var(--badge-text);
-  font-size:.7rem; line-height:1; padding:3px 6px;
-  border-radius:999px; border:2px solid var(--card);
-}
-
-/* Modal */
+/* ========= MODAL ========= */
 .modal-overlay{
   position:fixed; inset:0; background:var(--overlay);
   display:flex; align-items:center; justify-content:center; z-index:999;
 }
 .modal-content{
-  background-color:var(--card); color:var(--text);
-  border-radius:12px; width:100%; max-width:500px; max-height:90vh;
+  background: color-mix(in srgb, var(--card) 92%, #000 8%);
+  color:var(--text);
+  border: 1px solid var(--border);
+  border-radius:14px; width:100%; max-width:500px; max-height:90vh;
   overflow-y:auto; box-shadow:var(--shadow-2); font-family:'Roboto',sans-serif;
   position:relative;
 }
@@ -179,7 +217,21 @@
   .modal-body{ padding:1.5rem; }
 }
 
-/* Header unutar modala */
+/* ========= NOTIFICATIONS (cards) ========= */
+.notification-card{
+  display:grid;
+  grid-template-columns:1fr 44px;
+  align-items:stretch;
+  background: color-mix(in srgb, var(--card) 92%, #000 8%);
+  color:var(--text);
+  border: 1px solid var(--border);
+  border-radius:12px; overflow:hidden;
+  margin-bottom:10px; box-shadow:var(--shadow-1);
+  transition: box-shadow 0.2s;
+}
+.notification-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+.notif-main-content{ padding:10px; }
+
 .notif-panel-header{
   display:flex; align-items:center; justify-content:space-between;
   margin:-6px -6px 10px -6px; padding:6px; border-bottom:1px solid var(--border);
@@ -187,38 +239,35 @@
 .notif-panel-header h4{ margin:0; font-size:16px; color:var(--text); }
 .notif-close{ background:transparent; border:none; cursor:pointer; font-size:16px; color:var(--muted); }
 
-/* Kartica obavijesti: sadržaj + desna traka za brisanje */
-.notification-card{
-  display:grid;
-  grid-template-columns:1fr 44px;   /* lijevo sadržaj | desno delete traka */
-  align-items:stretch;
-  background:var(--card); color:var(--text);
-  border-radius:8px; overflow:hidden;
-  margin-bottom:10px; box-shadow:var(--shadow-1);
-}
-.notification-card:hover{ box-shadow:0 2px 8px rgba(0,0,0,.08);}
-
-/* lijevi dio */
-.notif-main-content{ padding:10px; }
-
-/* desna traka (X centriran i traka zalijepljena uz rub) */
+/* desna traka (delete) */
 .notif-delete-section{
-  width:44px; background-color:rgba(0,0,0,.04);
+  width:44px;
+  background: color-mix(in srgb, var(--card) 86%, #000 14%);
   display:flex; justify-content:center; align-items:center;
   border-left:1px solid var(--border);
 }
-:root[data-theme="dark"] .notif-delete-section{ background-color:rgba(255,255,255,.06); }
-
 .notif-delete-btn{
   background:transparent; border:none; font-size:18px; color:var(--muted);
   cursor:pointer; transition:color .2s, background .2s;
   line-height:1; width:32px; height:32px; border-radius:8px;
   display:flex; align-items:center; justify-content:center;
 }
-.notif-delete-btn:hover{ color:var(--danger); background:rgba(0,0,0,.05); }
-:root[data-theme="dark"] .notif-delete-btn:hover{ background:rgba(255,255,255,.08); }
+.notif-delete-btn:hover{ color:var(--danger); background: color-mix(in srgb, var(--card) 82%, #000 18%); }
 
-/* Gornji dio kartice obavijesti */
+.notif-remove {
+  all: unset;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 100%;
+  background: rgba(255,255,255,0.08);
+  border-left: 1px solid var(--border);
+  border-top-right-radius: 6px; border-bottom-right-radius: 6px;
+  color: var(--muted); font-size: 18px; line-height: 1;
+  box-sizing: border-box; transition: background 0.2s, color 0.2s;
+}
+.notif-remove:hover { background: rgba(255,255,255,0.10); color: var(--danger); }
+
+/* top sekcija u kartici */
 .notif-card-top{
   display:flex; justify-content:space-between; align-items:center;
   margin-bottom:10px; gap:10px;
@@ -228,7 +277,7 @@
   line-height:1.2; word-break:break-word;
 }
 
-/* Cijene */
+/* cijene */
 .notif-prices-row{
   display:grid; grid-template-columns:1fr auto 1fr;
   align-items:center; gap:12px; margin-bottom:6px;
@@ -238,16 +287,20 @@
 .price-value{ font-weight:700; font-size:1rem; white-space:nowrap; }
 .price-value.current{ color:var(--text); }
 .price-value.target{ color:var(--danger); }
+
+/* divider između cijena */
 .price-divider{
   width:1px; height:32px; background:var(--text);
-  opacity:.2; justify-self:center;
+  opacity:.15; justify-self:center;
 }
 
-/* Ostalo u obavijesti */
+/* ostalo */
 .notif-shop{ font-size:.85rem; color:var(--muted); padding-top: 0.3rem; }
+.notif-shop a{ color:#1976d2; text-decoration:none; }
+.notif-shop a:hover{ text-decoration:underline; }
 .notif-empty{ margin:0; padding:1rem; color:var(--muted); text-align:center; }
 
-/* Responsive */
+/* responsive za notifikacije */
 @media (max-width:768px){
   .modal-content{ max-height:70vh; }
   .notification-card{ border-radius:10px; }
@@ -272,43 +325,351 @@
   .notif-delete-btn{ font-size:16px; }
 }
 
-/* Dodiri / bez hovera */
-@media (hover:none) and (pointer:coarse){
-  .notif-delete-btn,
-  .notification-btn,
-  .logout-btn{ min-height:38px; }
+/* ========= INSET PANELS (carved look) ========= */
+.section-inset{
+  position: relative;
+  border-radius: 16px;
+  padding: 14px;
+  margin: 0 1rem 1.25rem;
+  background: color-mix(in srgb, var(--bg) 84%, #000 16%);
+  border: 1px solid var(--border);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 14px 28px rgba(0,0,0,0.35),
+    inset 0 -14px 28px rgba(0,0,0,0.28),
+    0 1px 0 rgba(255,255,255,0.03);
 }
 
-/* Link u obavijesti (shop) */
-.notif-shop a{
-  color:#1976d2; text-decoration:none;
+/* stack header/top/kategorije unutar inseta */
+.stack-section{ display:grid; grid-template-columns:1fr; gap:12px; }
+.stack-section .dashboard-header{
+  background: transparent; border: 0; border-radius: 10px; padding: 0; margin: 0; box-shadow: none;
 }
-.notif-shop a:hover{ text-decoration:underline; }
+.stack-section .dashboard-top{ margin:0; padding:0 2px; }
+.stack-section .category-buttons{ margin:0; padding:6px 2px 2px; }
+.stack-section .category-button{
+  background: color-mix(in srgb, var(--card) 88%, #000 12%); border-color: var(--border);
+}
 
-.notif-remove {
-  all: unset;                 
-  cursor: pointer;
+/* grid section spacing */
+.grid-section{ padding:16px; }
+.grid-section .product-grid{
+  padding:8px; border-radius:12px; background:transparent;
+}
+@media (max-width: 768px){
+  .section-inset{ margin: 0 .75rem 1rem; padding: 12px; }
+  .grid-section .product-grid{ padding: 6px; }
+}
+
+/* === FIX: header poravnanje === */
+.stack-section.section-inset { text-align: initial; }
+
+.header-row{
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between !important;
+  width: 100%;
+}
+
+.header-row .dashboard-welcome{
+  margin: 0;
+  text-align: left !important;
+}
+
+.header-row .dashboard-actions{
+  margin-left: auto !important;  /* gura akcije skroz desno */
   display: flex;
   align-items: center;
+  gap: 10px;
+}
+
+/* Floating HELP gumb (dark) */
+.help-fab{
+  position: fixed;
+  right: 70px;
+  bottom: 70px;
+  width: 75px;
+  height: 75px;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
-  width: 40px;                 
-  height: 100%;
-  background: rgba(0,0,0,0.05); 
-  border-left: 1px solid var(--border, rgba(0,0,0,0.1));
-  border-top-right-radius: 6px;
-  border-bottom-right-radius: 6px;
+  border: none;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  z-index: 1000;
+  box-shadow:
+    0 8px 20px rgba(0,0,0,.35),
+    inset 0 1px 0 rgba(255,255,255,.1);
+  transition: transform .12s ease, background-color .2s ease, box-shadow .2s ease;
+}
+.help-fab:hover{
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+  box-shadow:
+    0 12px 28px rgba(0,0,0,.4),
+    inset 0 1px 0 rgba(255,255,255,.12);
+}
+
+/* Help sadržaj */
+.help-list{
+  margin: 0 0 1rem 0;
+  padding-left: 1rem;
+  color: var(--text);
+}
+.help-list li{
+  margin: 0.5rem 0;
   color: var(--muted);
-  font-size: 18px;
-  line-height: 1;
-  box-sizing: border-box;   /* sprječava pomak kod bordera */
-  transition: background 0.2s, color 0.2s; /* glatki hover */
+}
+.help-list li strong{ color: var(--text); }
+
+/* Footer u help modalu */
+.help-footer{
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.hide-help-checkbox{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  user-select: none;
 }
 
-.notif-remove:hover {
-  background: rgba(255,0,0,0.1); 
-  color: var(--danger);
+/* ===== Notifications modal – veći i carved ===== */
+.notif-modal{
+  max-width: 900px !important;     /* širi modal */
+  border-radius: 16px !important;
+  box-shadow: var(--shadow-2);
+}
+@media (max-width: 1024px){
+  .notif-modal{ max-width: 760px !important; }
+}
+@media (max-width: 640px){
+  .notif-modal{ width: 92% !important; }
 }
 
-:root[data-theme="dark"] .notif-remove:hover {
-  background: rgba(255,255,255,0.08);
+/* malo više zraka unutra */
+.notif-modal .modal-body{
+  padding: 1.6rem 1.8rem;
+}
+
+/* header unutar modala – jasniji razdjelnik */
+.notif-modal .notif-panel-header{
+  margin: -6px -6px 14px -6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ===== Kartice obavijesti – okvir kao ProductCard ===== */
+.notif-modal .notification-card{
+  background: color-mix(in srgb, var(--card) 92%, #000 8%);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    inset 0 -10px 18px rgba(0,0,0,0.20),
+    0 8px 22px rgba(0,0,0,0.22);
+  transition: box-shadow .25s ease, transform .18s ease, background .2s ease, border-color .2s ease;
+  margin-bottom: 14px;            /* razmak među obavijestima */
+}
+
+.notif-modal .notification-card:hover{
+  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--card) 96%, #000 4%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 -8px 16px rgba(0,0,0,0.16),
+    0 12px 28px rgba(0,0,0,0.28);
+}
+
+/* lijevi sadržaj u kartici */
+.notif-modal .notif-main-content{
+  padding: 12px 14px;
+}
+
+/* desna “delete” traka da se poravna s novim okvirom */
+.notif-modal .notif-delete-section{
+  width: 48px;
+  background: color-mix(in srgb, var(--card) 86%, #000 14%);
+  border-left: 1px solid var(--border);
+}
+
+/* divider između cijena suptilniji */
+.notif-modal .price-divider{
+  width: 1px;
+  height: 32px;
+  background: var(--text);
+  opacity: .16;
+  justify-self: center;
+}
+
+/* Viši i širi modal */
+.notif-modal{
+  max-width: 920px !important;
+  min-height: 60vh !important;
+  max-height: 85vh !important;
+  border-radius: 16px !important;
+}
+
+/* tijelo modala kao kolona: header gore, lista puni ostatak */
+.notif-modal .modal-body{
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1.2rem 1.4rem;
+  padding-bottom: 0;
+}
+
+/* UREZANI (carved) KONTEJNER za listu obavijesti */
+.notif-list-inset{
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;  
+  margin-top: 10px;
+  padding: 12px;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--bg) 84%, #000 16%);
+  border: 1px solid var(--border);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 14px 28px rgba(0,0,0,0.35),
+    inset 0 -14px 28px rgba(0,0,0,0.28),
+    0 1px 0 rgba(255,255,255,0.03);
+}
+
+/* Svaka obavijest – okvir kao product card */
+.notif-modal .notification-card{
+  display: grid;
+  grid-template-columns: 1fr 44px;
+  align-items: stretch;
+  background: color-mix(in srgb, var(--card) 92%, #000 8%);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 12px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    inset 0 -10px 18px rgba(0,0,0,0.20),
+    0 8px 22px rgba(0,0,0,0.22);
+  transition: box-shadow .25s ease, transform .18s ease, background .2s ease, border-color .2s ease;
+}
+
+.notif-modal .notification-card:hover{
+  transform: translateY(-2px);
+  background: color-mix(in srgb, var(--card) 96%, #000 4%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.06),
+    inset 0 -8px 16px rgba(0,0,0,0.16),
+    0 12px 28px rgba(0,0,0,0.28);
+}
+
+/* lijevi dio u kartici */
+.notif-modal .notif-main-content{ padding: 12px 14px; }
+
+/* desna traka × poravnata s novim okvirom */
+.notif-modal .notif-delete-section{
+  width: 44px;
+  background: color-mix(in srgb, var(--card) 86%, #000 14%);
+  border-left: 1px solid var(--border);
+}
+
+/* diskretniji divider između cijena */
+.notif-modal .price-divider{
+  width: 1px;
+  height: 32px;
+  background: var(--text);
+  opacity: .16;
+  justify-self: center;
+}
+
+/* opcionalno: tanji scrollbar unutar liste */
+.notif-list-inset::-webkit-scrollbar{ width: 10px; }
+.notif-list-inset::-webkit-scrollbar-thumb{
+  background: color-mix(in srgb, var(--card) 70%, #000 30%);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* UžI, viši modal (manje info → ne treba širina) */
+.notif-modal{
+  max-width: 700px !important;   /* prije 900+ */
+  min-height: 52vh !important;
+  max-height: 72vh !important;
+  border-radius: 14px !important;
+}
+
+/* tijelo modala = header gore, lista ispod */
+.notif-modal .modal-body{
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 1.2rem 1.3rem;
+}
+
+/* LISTA OBUHVAĆENA SOFT PANEL-om (svjetlije, manje “tamnog ureza”) */
+.notif-list-inset{
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--card) 90%, #000 50%); /* svjetlije od prije */
+  border: 1px solid var(--border);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.04),
+    0 4px 12px rgba(0,0,0,0.18); /* maknuti teške inset sjene */
+}
+
+/* SVAKA OBAVIJEST – lakši okvir kao na karticama, ali suptilniji */
+.notif-modal .notification-card{
+  display: grid;
+  grid-template-columns: 1fr 40px;
+  align-items: stretch;
+  background: color-mix(in srgb, var(--card) 94%, #000 6%);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 3px;
+  margin-bottom: 15px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.04),
+    0 6px 16px rgba(0,0,0,0.18);   /* blaže od prije */
+  transition: box-shadow .2s ease, transform .16s ease, background .2s ease;
+}
+.notif-modal .notification-card:hover{
+  transform: translateY(-1px);
+  background: color-mix(in srgb, var(--card) 97%, #000 3%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.05),
+    0 10px 22px rgba(0,0,0,0.22);
+}
+
+/* desna traka “×” – svjetlija i uža */
+.notif-modal .notif-delete-section{
+  width: 40px;
+  background: color-mix(in srgb, var(--card) 94%, #000 6%);
+  border-left: 1px solid var(--border);
+}
+
+/* divider između cijena – diskretan */
+.notif-modal .price-divider{
+  width: 1px;
+  height: 40px;
+  background: var(--text);
+  opacity: .20;
+  justify-self: center;
+}
+
+/* header razdjelnik malo suptilniji */
+.notif-modal .notif-panel-header{
+  margin: -6px -6px 12px -6px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
 }

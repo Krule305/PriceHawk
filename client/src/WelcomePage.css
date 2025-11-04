@@ -1,25 +1,30 @@
-/* Glavni container */
 .welcome-container {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: var(--bg);
+  background: linear-gradient(135deg, #141e30 0%, #243b55 100%);
   color: var(--text);
+  font-family: 'Roboto', sans-serif;
+  padding: 1rem;
 }
 
-/* Dobrodošlica */
 .welcome-box {
-  background-color: var(--card);
+  background: color-mix(in srgb, var(--card) 92%, #000 8%);
   color: var(--text);
   padding: 3rem 4rem;
   border-radius: 10px;
-  box-shadow: var(--shadow-2);
+  max-width: 520px;
+  width: 100%;
   text-align: center;
-  max-width: 500px;
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,0.02),
+    inset 0 -4px 6px rgba(0,0,0,0.18),
+    inset 0 4px 10px rgba(0,0,0,0.12),
+    0 1px 6px rgba(0,0,0,0.25);
 }
 
-/* Tekstualni elementi */
+/* Tekst */
 .welcome-box h1 {
   margin-bottom: 1rem;
   font-size: 2rem;
@@ -43,13 +48,69 @@
   padding: 0.7rem 1.5rem;
   font-size: 1rem;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   cursor: pointer;
   background-color: var(--primary);
-  color: white;
-  transition: background-color 0.2s;
+  color: #fff;
+  transition: background-color 0.2s, transform 0.15s;
 }
 
 .button-group button:hover {
   background-color: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .welcome-box {
+    padding: 2rem;
+    max-width: 90%;
+    border-radius: 8px;
+  }
+
+  .welcome-box h1 {
+    font-size: 1.6rem;
+  }
+
+  .welcome-box p {
+    font-size: 0.95rem;
+  }
+
+  .button-group {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: center; /* centrira gumbe */
+  }
+
+  .button-group button {
+    width: auto; /* više nije full width */
+    min-width: 140px; /* da zadrži skladnu veličinu */
+    font-size: 0.95rem;
+    padding: 0.6rem 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .welcome-box {
+    padding: 1.5rem;
+    max-width: 95%;
+  }
+
+  .welcome-box h1 {
+    font-size: 1.4rem;
+  }
+
+  .welcome-box p {
+    font-size: 0.9rem;
+  }
+
+  .button-group {
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .button-group button {
+    width: auto;
+    min-width: 130px;
+    padding: 0.55rem 1.1rem;
+  }
 }

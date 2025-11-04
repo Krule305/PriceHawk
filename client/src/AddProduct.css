@@ -78,9 +78,10 @@
 /* URL polja */
 .url-row {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 1fr 40px; /* fiksna širina stupca za X */
   gap: 0.5rem;
   margin-bottom: 0.4rem;
+  align-items: stretch; /* oba elementa iste visine */
 }
 
 .url-row input {
@@ -88,6 +89,7 @@
   min-width: 0;
 }
 
+/* Gumbi za dodavanje i uklanjanje URL-a */
 .add-url,
 .remove-url {
   background: none;
@@ -95,28 +97,39 @@
   color: var(--primary);
   font-size: 1rem;
   cursor: pointer;
-  padding: 4px;
-  padding-bottom: 20px;
-  border-radius: 4px;
+  border-radius: 10px;
   transition: background-color 0.2s;
 }
 
-.remove-url:hover {
-  background-color: rgba(0, 0, 0, 0.04);
+/* gumb za uklanjanje (X) – centriran unutar ćelije */
+.remove-url {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 0; /* makni padding koji ga je dizao */
 }
 
-:root[data-theme="dark"] .remove-url:hover {
+.remove-url:hover {
   background-color: rgba(255, 255, 255, 0.06);
 }
 
+/* gumb za dodavanje URL-a */
 .add-url {
   margin-top: 0.4rem;
 }
 
 /* Slika proizvoda */
-.image-preview {
-  margin: 1rem 0;
-  text-align: left;
+.image-preview img {
+  background: #ffffff !important; /* čista bijela u dark modu */
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 6px;
+  margin-top: 1%;
+  object-fit: contain;
+  box-shadow:
+    0 1px 3px rgba(0,0,0,0.08),
+    inset 0 1px 0 rgba(255,255,255,0.25);
 }
 
 .image-preview label {
@@ -131,28 +144,22 @@
   max-height: 180px;
   object-fit: contain;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 10px;
   padding: 4px;
-  background-color: rgba(0, 0, 0, 0.02);
-}
-
-:root[data-theme="dark"] .image-preview img {
   background-color: rgba(255, 255, 255, 0.02);
 }
 
 /* Scrapana cijena */
 .scraped-price {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: rgba(255, 255, 255, 0.06);
   padding: 0.6rem;
   border-radius: 6px;
   text-align: center;
   font-size: 0.95rem;
   margin-bottom: 1rem;
   color: var(--text);
-}
-
-:root[data-theme="dark"] .scraped-price {
-  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+  border-radius: 10px;
 }
 
 .scrape-status {
@@ -162,7 +169,6 @@
 }
 .scrape-status.info { color: var(--muted); }
 .scrape-status.error { color: var(--danger); }
-
 
 /* Footer gumba */
 .modal-footer {
@@ -198,20 +204,11 @@
   opacity: 0.7;
 }
 
-
 .cancel-btn {
-  background-color: rgba(0, 0, 0, 0.04);
+  background-color: rgba(255, 255, 255, 0.06);
   color: var(--text);
 }
 
 .cancel-btn:hover {
-  background-color: rgba(0, 0, 0, 0.08);
-}
-
-:root[data-theme="dark"] .cancel-btn {
-  background-color: rgba(255, 255, 255, 0.06);
-}
-
-:root[data-theme="dark"] .cancel-btn:hover {
   background-color: rgba(255, 255, 255, 0.12);
 }

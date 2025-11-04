@@ -15,7 +15,7 @@ import AddProduct from "./AddProduct";
 import ProductCard from "./ProductCard";
 import DeleteConfirmModal from "./DeleteConfirmModal";
 import { toast } from "react-toastify";
-import { FiBell, FiLogOut, FiMoon, FiSun } from "react-icons/fi";
+import { FiBell, FiLogOut, FiHelpCircle } from "react-icons/fi";
 import Modal from "react-modal";
 import "./Dashboard.css";
 
@@ -30,11 +30,8 @@ export default function Dashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [dismissedAlertIds, setDismissedAlertIds] = useState([]);
-  const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem("theme");
-    if (saved === "light" || saved === "dark") return saved;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-  });
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [hideHelp, setHideHelp] = useState(() => localStorage.getItem("hideHelp") === "1");
 
   const navigate = useNavigate();
 
@@ -60,14 +57,6 @@ export default function Dashboard() {
 
     return () => unsubscribe();
   }, [navigate]);
-
-  // Promjena teme
-  useEffect(() => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  const toggleTheme = () => setTheme((t) => (t === "dark" ? "light" : "dark"));
 
   // Odjava
   const handleLogout = async () => {
@@ -128,7 +117,11 @@ export default function Dashboard() {
   };
 
   const categoryCounts = getCategoryCounts();
-  const allCategories = ["Sve", ...new Set(products.map((p) => p.category || "Neodređeno"))];
+  const rawCategories = [...new Set(products.map((p) => p.category || "Neodređeno"))];
+  const sortedCategories = rawCategories
+    .filter((cat) => cat !== "Sve" && cat !== "Razno")
+    .sort((a, b) => a.localeCompare(b, "hr")); // abecedno sortiranje
+  const allCategories = ["Sve", ...sortedCategories, "Razno"];
 
   // Izračun obavijesti
   const alerts = products.filter(
@@ -143,113 +136,43 @@ export default function Dashboard() {
 
   if (loading) return <p>Učitavanje...</p>;
 
+  // Filtrirani proizvodi + empty-state flagovi
+  const visibleProducts = products.filter(
+    (p) =>
+      (selectedCategory === "Sve" || p.category === selectedCategory) &&
+      (p.name?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+  );
+  const hasAnyProducts = products.length > 0;
+
   return (
     <div className="dashboard-container">
-      <div className="dashboard-header">
-        <h2 className="dashboard-welcome">Pozdrav {username}!</h2>
-        <div className="dashboard-actions">
-          <button
-            className="notification-btn"
-            onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-            title="Obavijesti"
-            aria-label="Obavijesti"
-          >
-            <FiBell size={18} />
-            {unreadCount > 0 && (
-              <span className="notif-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>
-            )}
-          </button>
+      {/* ===== SEKCIJA 1: HEADER + KONTROLE + KATEGORIJE ===== */}
+      <div className="stack-section section-inset">
+        {/* RED 1: pozdrav (lijevo) + akcije (desno) */}
+        <div className="header-row">
+          <h2 className="dashboard-welcome">Pozdrav {username}!</h2>
 
-          <button
-            className="notification-btn"
-            onClick={toggleTheme}
-            title={theme === "dark" ? "Prebaci na svijetlu" : "Prebaci na tamnu"}
-            aria-label="Promijeni temu"
-            style={{ width: 36, height: 36 }}
-          >
-            {theme === "dark" ? <FiSun size={16} /> : <FiMoon size={16} />}
-          </button>
+          <div className="dashboard-actions">
+            <button
+              className="notification-btn"
+              onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+              title="Obavijesti"
+              aria-label="Obavijesti"
+            >
+              <FiBell size={18} />
+              {unreadCount > 0 && (
+                <span className="notif-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>
+              )}
+            </button>
 
-          <button className="logout-btn" onClick={handleLogout} title="Odjava" aria-label="Odjava">
-            <FiLogOut size={18} />
-          </button>
-        </div>
-      </div>
-
-      {/* Modal obavijesti */}
-      <Modal
-        isOpen={isNotificationsOpen}
-        onRequestClose={() => setIsNotificationsOpen(false)}
-        contentLabel="Obavijesti"
-        className="modal-content"
-        overlayClassName="modal-overlay"
-      >
-        <div className="modal-body">
-          <div className="notif-panel-header">
-            <h4>Obavijesti</h4>
-            <button className="notif-close" onClick={() => setIsNotificationsOpen(false)}>✕</button>
+            <button className="logout-btn" onClick={handleLogout} title="Odjava" aria-label="Odjava">
+              <FiLogOut size={18} />
+            </button>
           </div>
-
-          {alertsToShow.length === 0 ? (
-            <p className="notif-empty">Nema novih obavijesti.</p>
-          ) : (
-            alertsToShow.map((p) => {
-              const shopUrl = p.bestUrl || (Array.isArray(p.urls) ? p.urls[0] : "");
-              return (
-                <div key={p.id} className="notification-card">
-                  <div className="notif-main-content">
-                    <div className="notif-card-top">
-                      <div className="notif-name">{p.name || "Proizvod"}</div>
-                    </div>
-
-                    <div className="notif-prices-row">
-                      <div className="price-block">
-                        <span className="price-label">Trenutna cijena</span>
-                        <span className="price-value current">€ {p.scrapedPrice.toFixed(2)}</span>
-                      </div>
-                      <div className="price-divider" />
-                      <div className="price-block">
-                        <span className="price-label">Željena cijena</span>
-                        <span className="price-value target">€ {p.targetPrice.toFixed(2)}</span>
-                      </div>
-                    </div>
-
-                    {shopUrl && (
-                      <div className="notif-shop">
-                        Trgovina:{" "}
-                        <a href={shopUrl} target="_blank" rel="noreferrer">
-                          {(() => {
-                            try {
-                              return new URL(shopUrl).hostname.replace(/^www\./, "");
-                            } catch {
-                              return shopUrl;
-                            }
-                          })()}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-
-                  <button
-                    className="notif-remove"
-                    title="Ukloni ovu obavijest"
-                    aria-label="Ukloni obavijest"
-                    onClick={() =>
-                      setDismissedAlertIds((prev) => [...new Set([...prev, p.id])])
-                    }
-                  >
-                    ×
-                  </button>
-                </div>
-              );
-            })
-          )}
         </div>
-      </Modal>
 
-      {/* Gornji dio dashboarda*/}
-      <div className="dashboard-top">
-        <div className="left-controls">
+        {/* RED: Dodaj lijevo | Kategorije centar | Search desno */}
+        <div className="controls-row">
           <button
             onClick={() => {
               setEditingProduct(null);
@@ -259,9 +182,19 @@ export default function Dashboard() {
           >
             Dodaj novi proizvod
           </button>
-        </div>
 
-        <div className="right-controls">
+          <div className="controls-center">
+            {allCategories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setSelectedCategory(cat)}
+                className={`category-button ${selectedCategory === cat ? "active" : ""}`}
+              >
+                {cat} ({categoryCounts[cat] || 0})
+              </button>
+            ))}
+          </div>
+
           <div className="search-wrapper">
             <input
               type="text"
@@ -284,39 +217,164 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Kategorije */}
-      <div className="category-buttons">
-        {allCategories.map((cat) => (
+      {/* ===== SEKCIJA 2: PRODUCT GRID / EMPTY STATE ===== */}
+      <div className="grid-section section-inset">
+        {visibleProducts.length === 0 ? (
+          <div className="empty-state">
+            <h3>{hasAnyProducts ? "Nema rezultata" : "Nema proizvoda za praćenje"}</h3>
+            <p>
+              {hasAnyProducts
+                ? "Pokušaj promijeniti kategoriju ili pretragu."
+                : "Dodaj svoj prvi proizvod za praćenje. Ako trebaš pomoć, klikni na gumb pomoć."}
+            </p>
+            <div className="empty-actions">
+            </div>
+          </div>
+        ) : (
+          <div className="product-grid">
+            {visibleProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onEdit={(p) => {
+                  setEditingProduct(p);
+                  setIsModalOpen(true);
+                }}
+                onDelete={(id) => setProductToDelete(id)}
+              />
+            ))}
+          </div>
+        )}
+
+        {/* Floating HELP gumb — prikazuj samo ako nije skriven */}
+        {!hideHelp && (
           <button
-            key={cat}
-            onClick={() => setSelectedCategory(cat)}
-            className={`category-button ${selectedCategory === cat ? "active" : ""}`}
+            className="help-fab"
+            onClick={() => setIsHelpOpen(true)}
+            aria-label="Upute za korištenje"
+            title="Upute"
           >
-            {cat} ({categoryCounts[cat] || 0})
+            <FiHelpCircle size={35} />
           </button>
-        ))}
+        )}
+
+        {/* HELP modal */}
+        <Modal
+          isOpen={isHelpOpen}
+          onRequestClose={() => setIsHelpOpen(false)}
+          contentLabel="Kako koristiti aplikaciju"
+          className="modal-content"
+          overlayClassName="modal-overlay"
+        >
+          <div className="modal-body">
+            <div className="notif-panel-header">
+              <h4>Kako koristiti PriceHawk</h4>
+              <button className="notif-close" onClick={() => setIsHelpOpen(false)}>✕</button>
+            </div>
+
+            <ul className="help-list">
+              <li><strong>Dodaj proizvod</strong> – klikni gumb “Dodaj novi proizvod”, unesi naziv, URL-ove i Željenu cijenu.</li>
+              <li><strong>Kategorije</strong> – filtriraj proizvode po kategoriji.</li>
+              <li><strong>Pretraga</strong> – traži po nazivu u gornjoj tražilici.</li>
+              <li><strong>Obavijesti</strong> – kad Trenutna cijena padne ispod željene, pojavi se obavijest.</li>
+              <li><strong>Kartice proizvoda</strong> – olovka za uređivanje, koš za brisanje.</li>
+            </ul>
+
+            <div className="help-footer">
+              <label className="hide-help-checkbox">
+                <input
+                  type="checkbox"
+                  checked={hideHelp}
+                  onChange={(e) => {
+                    const v = e.target.checked;
+                    setHideHelp(v);
+                    localStorage.setItem("hideHelp", v ? "1" : "0");
+                  }}
+                />
+                Ne prikazuj više ovaj gumb
+              </label>
+
+              <button className="save-btn" onClick={() => setIsHelpOpen(false)}>
+                Zatvori
+              </button>
+            </div>
+          </div>
+        </Modal>
       </div>
 
-      {/* Grid proizvoda */}
-      <div className="product-grid">
-        {products
-          .filter(
-            (p) =>
-              (selectedCategory === "Sve" || p.category === selectedCategory) &&
-              (p.name?.toLowerCase() || "").includes(searchTerm.toLowerCase())
-          )
-          .map((product) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              onEdit={(p) => {
-                setEditingProduct(p);
-                setIsModalOpen(true);
-              }}
-              onDelete={(id) => setProductToDelete(id)}
-            />
-          ))}
-      </div>
+      {/* Modal obavijesti */}
+      <Modal
+        isOpen={isNotificationsOpen}
+        onRequestClose={() => setIsNotificationsOpen(false)}
+        contentLabel="Obavijesti"
+        className="modal-content notif-modal"
+        overlayClassName="modal-overlay"
+      >
+        <div className="modal-body">
+          <div className="notif-panel-header">
+            <h4>Obavijesti</h4>
+            <button className="notif-close" onClick={() => setIsNotificationsOpen(false)}>✕</button>
+          </div>
+
+          {/* UREZANI KONTEJNER za listu obavijesti */}
+          <div className="notif-list-inset">
+            {alertsToShow.length === 0 ? (
+              <p className="notif-empty">Nema novih obavijesti.</p>
+            ) : (
+              alertsToShow.map((p) => {
+                const shopUrl = p.bestUrl || (Array.isArray(p.urls) ? p.urls[0] : "");
+                return (
+                  <div key={p.id} className="notification-card">
+                    <div className="notif-main-content">
+                      <div className="notif-card-top">
+                        <div className="notif-name">{p.name || "Proizvod"}</div>
+                      </div>
+
+                      <div className="notif-prices-row">
+                        <div className="price-block">
+                          <span className="price-label">Trenutna cijena</span>
+                          <span className="price-value current">€ {p.scrapedPrice.toFixed(2)}</span>
+                        </div>
+                        <div className="price-divider" />
+                        <div className="price-block">
+                          <span className="price-label">Željena cijena</span>
+                          <span className="price-value target">€ {p.targetPrice.toFixed(2)}</span>
+                        </div>
+                      </div>
+
+                      {shopUrl && (
+                        <div className="notif-shop">
+                          Trgovina:{" "}
+                          <a href={shopUrl} target="_blank" rel="noreferrer">
+                            {(() => {
+                              try {
+                                return new URL(shopUrl).hostname.replace(/^www\./, "");
+                              } catch {
+                                return shopUrl;
+                              }
+                            })()}
+                          </a>
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      className="notif-remove"
+                      title="Ukloni ovu obavijest"
+                      aria-label="Ukloni obavijest"
+                      onClick={() =>
+                        setDismissedAlertIds((prev) => [...new Set([...prev, p.id])])
+                      }
+                    >
+                      ×
+                    </button>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </Modal>
 
       {/* Modal za dodavanje/uređivanje */}
       <AddProduct
